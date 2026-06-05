@@ -3,6 +3,27 @@
 #include <stdlib.h>
 #include <time.h>
 
+static const char *bloomShaderCode =
+    "#version 330\n"
+    "in vec2 fragTexCoord;\n"
+    "out vec4 finalColor;\n"
+    "uniform sampler2D texture0;\n"
+    "uniform vec2 resolution;\n"
+    "void main() {\n"
+    "    vec2 ts = 3.0 / resolution;\n"
+    "    vec4 c = texture(texture0, fragTexCoord);\n"
+    "    vec4 b = vec4(0.0);\n"
+    "    for (int i = -6; i <= 6; i++) {\n"
+    "        for (int j = -6; j <= 6; j++) {\n"
+    "            float d = float(i*i + j*j);\n"
+    "            float w = exp(-d / 18.0);\n"
+    "            b += texture(texture0, fragTexCoord + vec2(float(i), float(j)) * ts) * w;\n"
+    "        }\n"
+    "    }\n"
+    "    b /= 50.0;\n"
+    "    finalColor = c + b * 1.2;\n"
+    "}\n";
+
 static void game_init(GameState *gs) {
     float scale_x = (float)GetScreenWidth() / LOGICAL_W;
     float scale_y = (float)GetScreenHeight() / LOGICAL_H;
@@ -74,6 +95,13 @@ int main(void) {
     InitWindow(WINDOW_W, WINDOW_H, "DISK SURVIVOR");
     SetTargetFPS(TARGET_FPS);
 
+    RenderTexture2D target = LoadRenderTexture(WINDOW_W, WINDOW_H);
+    Shader bloom = LoadShaderFromMemory(0, bloomShaderCode);
+
+    int resLoc = GetShaderLocation(bloom, "resolution");
+    float resolution[2] = {(float)WINDOW_W, (float)WINDOW_H};
+    SetShaderValue(bloom, resLoc, resolution, SHADER_UNIFORM_VEC2);
+
     GameState gs = {0};
     game_init(&gs);
 
@@ -112,7 +140,7 @@ int main(void) {
             }
         }
 
-        BeginDrawing();
+        BeginTextureMode(target);
         render_background();
         BeginBlendMode(BLEND_ADDITIVE);
 
@@ -125,6 +153,16 @@ int main(void) {
         player_draw(&gs.player, gs.scale, gs.offset);
 
         EndBlendMode();
+        EndTextureMode();
+
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        BeginShaderMode(bloom);
+        DrawTextureRec(target.texture,
+            (Rectangle){0, 0, (float)target.texture.width, (float)-target.texture.height},
+            (Vector2){0, 0}, WHITE);
+        EndShaderMode();
 
         draw_hud(&gs);
 
@@ -147,6 +185,8 @@ int main(void) {
         EndDrawing();
     }
 
+    UnloadShader(bloom);
+    UnloadRenderTexture(target);
     CloseWindow();
     return 0;
 }
