@@ -92,6 +92,69 @@ static void draw_hud(const GameState *gs) {
     DrawText(buf, GetScreenWidth() - 120, 10, 20, (Color){200, 200, 200, 255});
 }
 
+static void update_game(GameState *gs, float dt) {
+    if (gs->upgrading) {
+        upgrade_update(gs);
+        return;
+    }
+
+    gs->game_time += dt;
+
+    if (!gs->boss.active && !gs->boss_defeated && gs->game_time >= BOSS_SPAWN_TIME) {
+        boss_spawn(gs);
+    }
+
+    if (gs->boss_defeated) {
+        gs->game_over = true;
+        gs->victory = true;
+        gs->scene = SCENE_RESULT;
+        gs->scene_timer = 0;
+        return;
+    }
+
+    if (gs->game_time >= GAME_DURATION) {
+        gs->game_over = true;
+        gs->victory = true;
+        gs->scene = SCENE_RESULT;
+        gs->scene_timer = 0;
+        return;
+    }
+
+    if (gs->player.hp <= 0) {
+        gs->game_over = true;
+        gs->victory = false;
+        gs->scene = SCENE_RESULT;
+        gs->scene_timer = 0;
+        return;
+    }
+
+    player_update(&gs->player, dt, gs->scale);
+    weapon_update(gs, dt);
+    bullet_update(gs, dt);
+    orbiters_update(gs, dt);
+    beam_update(gs, dt);
+    nova_update(gs, dt);
+    enemy_update(gs, dt);
+    boss_update(gs, dt);
+    gem_update(gs, dt);
+}
+
+static void draw_game_world(const GameState *gs) {
+    render_background();
+    BeginBlendMode(BLEND_ADDITIVE);
+
+    bullet_draw(gs->bullets, gs->scale, gs->offset);
+    orbiters_draw(gs, gs->scale, gs->offset);
+    beam_draw(gs, gs->scale, gs->offset);
+    nova_draw(gs, gs->scale, gs->offset);
+    enemy_draw(gs->enemies, gs->scale, gs->offset);
+    boss_draw(gs, gs->scale, gs->offset);
+    gem_draw(gs->gems, gs->scale, gs->offset);
+    player_draw(&gs->player, gs->scale, gs->offset);
+
+    EndBlendMode();
+}
+
 int main(void) {
     srand((unsigned)time(NULL));
 
@@ -106,67 +169,44 @@ int main(void) {
     SetShaderValue(bloom, resLoc, resolution, SHADER_UNIFORM_VEC2);
 
     GameState gs = {0};
+    gs.scene = SCENE_TITLE;
+    gs.scene_timer = 0;
     game_init(&gs);
+
+    GameScene prev_scene = SCENE_TITLE;
 
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         if (dt > DT_MAX) dt = DT_MAX;
 
-        if (!gs.game_over) {
-            if (gs.upgrading) {
-                upgrade_update(&gs);
-            } else {
-                gs.game_time += dt;
-
-                if (!gs.boss.active && !gs.boss_defeated && gs.game_time >= BOSS_SPAWN_TIME) {
-                    boss_spawn(&gs);
+        switch (gs.scene) {
+            case SCENE_TITLE:
+                if (prev_scene != SCENE_TITLE) {
+                    game_init(&gs);
+                    gs.scene = SCENE_TITLE;
+                    gs.scene_timer = 0;
                 }
-
-                if (gs.boss_defeated) {
-                    gs.game_over = true;
-                    gs.victory = true;
+                scene_title_update(&gs, dt);
+                if (gs.scene == SCENE_GAME) {
+                    game_init(&gs);
+                    gs.scene = SCENE_GAME;
                 }
-
-                if (gs.game_time >= GAME_DURATION) {
-                    gs.game_over = true;
-                    gs.victory = true;
-                }
-
-                if (gs.player.hp <= 0) {
-                    gs.game_over = true;
-                    gs.victory = false;
-                }
-
-                player_update(&gs.player, dt, gs.scale);
-                weapon_update(&gs, dt);
-                bullet_update(&gs, dt);
-                orbiters_update(&gs, dt);
-                beam_update(&gs, dt);
-                nova_update(&gs, dt);
-                enemy_update(&gs, dt);
-                boss_update(&gs, dt);
-                gem_update(&gs, dt);
-            }
-        } else {
-            if (IsKeyPressed(KEY_R)) {
-                game_init(&gs);
-            }
+                break;
+            case SCENE_GAME:
+                update_game(&gs, dt);
+                break;
+            case SCENE_RESULT:
+                scene_result_update(&gs, dt);
+                break;
         }
+        prev_scene = gs.scene;
 
         BeginTextureMode(target);
-        render_background();
-        BeginBlendMode(BLEND_ADDITIVE);
-
-        bullet_draw(gs.bullets, gs.scale, gs.offset);
-        orbiters_draw(&gs, gs.scale, gs.offset);
-        beam_draw(&gs, gs.scale, gs.offset);
-        nova_draw(&gs, gs.scale, gs.offset);
-        enemy_draw(gs.enemies, gs.scale, gs.offset);
-        boss_draw(&gs, gs.scale, gs.offset);
-        gem_draw(gs.gems, gs.scale, gs.offset);
-        player_draw(&gs.player, gs.scale, gs.offset);
-
-        EndBlendMode();
+        if (gs.scene == SCENE_TITLE) {
+            render_background();
+        } else {
+            draw_game_world(&gs);
+        }
         EndTextureMode();
 
         BeginDrawing();
@@ -178,22 +218,18 @@ int main(void) {
             (Vector2){0, 0}, WHITE);
         EndShaderMode();
 
-        draw_hud(&gs);
-
-        if (gs.upgrading) {
-            upgrade_draw(&gs);
-        }
-
-        if (gs.game_over) {
-            const char *msg = gs.victory ? "DISK RECOVERED!" : "DATA CORRUPTED";
-            int w = MeasureText(msg, 40);
-            DrawText(msg, (GetScreenWidth() - w) / 2, GetScreenHeight() / 2 - 40, 40,
-                gs.victory ? (Color){100, 255, 100, 255} : (Color){255, 100, 100, 255});
-
-            const char *hint = "Press R to restart";
-            int hw = MeasureText(hint, 20);
-            DrawText(hint, (GetScreenWidth() - hw) / 2, GetScreenHeight() / 2 + 20, 20,
-                (Color){200, 200, 200, 255});
+        switch (gs.scene) {
+            case SCENE_TITLE:
+                scene_title_draw(&gs);
+                break;
+            case SCENE_GAME:
+                draw_hud(&gs);
+                if (gs.upgrading) upgrade_draw(&gs);
+                break;
+            case SCENE_RESULT:
+                draw_hud(&gs);
+                scene_result_draw(&gs);
+                break;
         }
 
         EndDrawing();

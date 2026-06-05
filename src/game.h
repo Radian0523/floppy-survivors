@@ -6,6 +6,12 @@
 #include <stdbool.h>
 
 typedef enum {
+    SCENE_TITLE,
+    SCENE_GAME,
+    SCENE_RESULT
+} GameScene;
+
+typedef enum {
     // Base upgrades
     UPGRADE_RAPID_FIRE,
     UPGRADE_MULTI_SHOT,
@@ -154,6 +160,9 @@ typedef struct {
     Boss boss;
     bool boss_defeated;
 
+    GameScene scene;
+    float scene_timer;
+
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
     int upgrade_hover;
@@ -193,6 +202,11 @@ void boss_spawn(GameState *gs);
 void boss_update(GameState *gs, float dt);
 void boss_draw(const GameState *gs, float scale, Vector2 offset);
 void boss_take_damage(GameState *gs, int damage);
+
+void scene_title_update(GameState *gs, float dt);
+void scene_title_draw(const GameState *gs);
+void scene_result_update(GameState *gs, float dt);
+void scene_result_draw(const GameState *gs);
 
 void gem_spawn(GameState *gs, Vector2 pos);
 void gem_update(GameState *gs, float dt);

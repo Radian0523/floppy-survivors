@@ -5,7 +5,7 @@ CC = cc
 CFLAGS = -std=c99 -Os -flto -Wall -Wextra
 LDFLAGS = -flto
 
-SRCS = src/main.c src/player.c src/weapon.c src/enemy.c src/gem.c src/render.c src/input.c src/upgrade.c src/boss.c
+SRCS = src/main.c src/player.c src/weapon.c src/enemy.c src/gem.c src/render.c src/input.c src/upgrade.c src/boss.c src/scene.c
 TARGET = disk_survivor
 
 # Size limit (1.44 MB floppy)
