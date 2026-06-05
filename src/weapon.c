@@ -2,6 +2,27 @@
 #include <math.h>
 #include <float.h>
 
+static void kill_enemy(GameState *gs, int idx) {
+    Enemy *e = &gs->enemies[idx];
+    Vector2 pos = e->pos;
+    EnemyType type = e->type;
+
+    gem_spawn(gs, pos);
+    e->active = false;
+    gs->kills++;
+
+    if (type == ENEMY_SPLITTER) {
+        for (int i = 0; i < SPLITTER_CHILD_COUNT; i++) {
+            float angle = (2.0f * 3.14159f * i) / SPLITTER_CHILD_COUNT;
+            Vector2 child_pos = {
+                pos.x + cosf(angle) * 15.0f,
+                pos.y + sinf(angle) * 15.0f
+            };
+            enemy_spawn_at(gs, ENEMY_SPLITTER_CHILD, child_pos);
+        }
+    }
+}
+
 static int find_nearest_enemy(const GameState *gs) {
     int nearest = -1;
     float min_dist = FLT_MAX;
@@ -69,13 +90,11 @@ void bullet_update(GameState *gs, float dt) {
             float dx = b->pos.x - gs->enemies[j].pos.x;
             float dy = b->pos.y - gs->enemies[j].pos.y;
             float dist = sqrtf(dx * dx + dy * dy);
-            if (dist < BULLET_RADIUS + ENEMY_RADIUS) {
+            if (dist < BULLET_RADIUS + gs->enemies[j].radius) {
                 gs->enemies[j].hp -= gs->bullet_damage;
                 b->active = false;
                 if (gs->enemies[j].hp <= 0) {
-                    gem_spawn(gs, gs->enemies[j].pos);
-                    gs->enemies[j].active = false;
-                    gs->kills++;
+                    kill_enemy(gs, j);
                 }
                 break;
             }
@@ -126,12 +145,10 @@ void orbiters_update(GameState *gs, float dt) {
             float dx = ox - gs->enemies[j].pos.x;
             float dy = oy - gs->enemies[j].pos.y;
             float dist = sqrtf(dx * dx + dy * dy);
-            if (dist < ORBITER_RADIUS + ENEMY_RADIUS) {
+            if (dist < ORBITER_RADIUS + gs->enemies[j].radius) {
                 gs->enemies[j].hp -= gs->orbiter_damage;
                 if (gs->enemies[j].hp <= 0) {
-                    gem_spawn(gs, gs->enemies[j].pos);
-                    gs->enemies[j].active = false;
-                    gs->kills++;
+                    kill_enemy(gs, j);
                 }
             }
         }
@@ -195,12 +212,10 @@ void beam_update(GameState *gs, float dt) {
             if (proj < 0 || proj > gs->beam_length) continue;
 
             float perp = fabsf(-dx * sin_a + dy * cos_a);
-            if (perp < BEAM_WIDTH / 2 + ENEMY_RADIUS) {
+            if (perp < BEAM_WIDTH / 2 + gs->enemies[i].radius) {
                 gs->enemies[i].hp -= gs->beam_damage;
                 if (gs->enemies[i].hp <= 0) {
-                    gem_spawn(gs, gs->enemies[i].pos);
-                    gs->enemies[i].active = false;
-                    gs->kills++;
+                    kill_enemy(gs, i);
                 }
             }
         }
@@ -261,9 +276,7 @@ void nova_update(GameState *gs, float dt) {
             if (dist > ring_inner && dist < ring_outer) {
                 gs->enemies[i].hp -= gs->nova_damage;
                 if (gs->enemies[i].hp <= 0) {
-                    gem_spawn(gs, gs->enemies[i].pos);
-                    gs->enemies[i].active = false;
-                    gs->kills++;
+                    kill_enemy(gs, i);
                 }
             }
         }

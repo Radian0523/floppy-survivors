@@ -53,6 +53,29 @@
 #define ENEMY_DAMAGE 1
 #define MAX_ENEMIES 256
 
+// Enemy types
+#define BIT_HP 2
+#define BIT_SPEED 54.0f
+#define BIT_RADIUS 10.0f
+
+#define FRAGMENT_HP 1
+#define FRAGMENT_SPEED 90.0f
+#define FRAGMENT_RADIUS 7.0f
+
+#define PACKET_HP 6
+#define PACKET_SPEED 30.0f
+#define PACKET_RADIUS 14.0f
+
+#define GLITCH_HP 2
+#define GLITCH_SPEED 60.0f
+#define GLITCH_RADIUS 9.0f
+#define GLITCH_DIR_CHANGE_TIME 0.4f
+
+#define SPLITTER_HP 3
+#define SPLITTER_SPEED 45.0f
+#define SPLITTER_RADIUS 12.0f
+#define SPLITTER_CHILD_COUNT 3
+
 // Spawning
 #define SPAWN_INTERVAL_INITIAL 0.95f
 #define SPAWN_INTERVAL_MIN 0.28f

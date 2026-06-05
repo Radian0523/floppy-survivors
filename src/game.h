@@ -54,11 +54,24 @@ typedef struct {
     bool expanding;
 } NovaState;
 
+typedef enum {
+    ENEMY_BIT,
+    ENEMY_FRAGMENT,
+    ENEMY_PACKET,
+    ENEMY_GLITCH,
+    ENEMY_SPLITTER,
+    ENEMY_SPLITTER_CHILD,
+    ENEMY_TYPE_COUNT
+} EnemyType;
+
 typedef struct {
     Vector2 pos;
     Vector2 vel;
     int hp;
     float speed;
+    float radius;
+    EnemyType type;
+    float glitch_timer;
     bool active;
 } Enemy;
 
@@ -144,6 +157,7 @@ void nova_update(GameState *gs, float dt);
 void nova_draw(const GameState *gs, float scale, Vector2 offset);
 
 void enemy_spawn(GameState *gs);
+void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos);
 void enemy_update(GameState *gs, float dt);
 void enemy_draw(const Enemy enemies[], float scale, Vector2 offset);
 
