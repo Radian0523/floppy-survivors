@@ -85,7 +85,7 @@ static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
 
 void upgrade_start(GameState *gs) {
     gs->upgrading = true;
-    gs->upgrade_hover = -1;
+    gs->upgrade_hover = 0;
 
     bool used[UPGRADE_COUNT] = {false};
 
@@ -179,16 +179,30 @@ void upgrade_update(GameState *gs) {
     int start_y = GetScreenHeight() / 2 - box_h / 2 + 30;
 
     Vector2 mouse = GetMousePosition();
-    gs->upgrade_hover = -1;
+    static Vector2 prev_mouse = {0, 0};
+    bool mouse_moved = (mouse.x != prev_mouse.x || mouse.y != prev_mouse.y);
+    prev_mouse = mouse;
 
-    for (int i = 0; i < UPGRADE_CHOICES; i++) {
-        int x = start_x + i * (box_w + gap);
-        int y = start_y;
-
-        if (mouse.x >= x && mouse.x < x + box_w &&
-            mouse.y >= y && mouse.y < y + box_h) {
-            gs->upgrade_hover = i;
+    if (mouse_moved) {
+        int hovered = -1;
+        for (int i = 0; i < UPGRADE_CHOICES; i++) {
+            int x = start_x + i * (box_w + gap);
+            int y = start_y;
+            if (mouse.x >= x && mouse.x < x + box_w &&
+                mouse.y >= y && mouse.y < y + box_h) {
+                hovered = i;
+            }
         }
+        if (hovered >= 0) gs->upgrade_hover = hovered;
+    }
+
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+        if (gs->upgrade_hover <= 0) gs->upgrade_hover = UPGRADE_CHOICES - 1;
+        else gs->upgrade_hover--;
+    }
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+        if (gs->upgrade_hover < 0) gs->upgrade_hover = 0;
+        else gs->upgrade_hover = (gs->upgrade_hover + 1) % UPGRADE_CHOICES;
     }
 
     int selected = -1;
@@ -197,8 +211,16 @@ void upgrade_update(GameState *gs) {
     if (IsKeyPressed(KEY_TWO) || IsKeyPressed(KEY_KP_2)) selected = 1;
     if (IsKeyPressed(KEY_THREE) || IsKeyPressed(KEY_KP_3)) selected = 2;
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && gs->upgrade_hover >= 0) {
+    if ((IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) && gs->upgrade_hover >= 0) {
         selected = gs->upgrade_hover;
+    }
+
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && gs->upgrade_hover >= 0) {
+        int x = start_x + gs->upgrade_hover * (box_w + gap);
+        if (mouse.x >= x && mouse.x < x + box_w &&
+            mouse.y >= start_y && mouse.y < start_y + box_h) {
+            selected = gs->upgrade_hover;
+        }
     }
 
     if (selected >= 0 && selected < UPGRADE_CHOICES) {
@@ -217,7 +239,7 @@ void upgrade_draw(const GameState *gs) {
     DrawText(title, (GetScreenWidth() - title_w) / 2, GetScreenHeight() / 2 - 100, 40,
         (Color){255, 255, 100, 255});
 
-    const char *hint = "Choose an upgrade (1/2/3 or click)";
+    const char *hint = "Arrow/WASD: move  -  SPACE/Enter: confirm  -  1-3: quick select";
     int hint_w = MeasureText(hint, 16);
     DrawText(hint, (GetScreenWidth() - hint_w) / 2, GetScreenHeight() / 2 - 50, 16,
         (Color){180, 180, 180, 255});
