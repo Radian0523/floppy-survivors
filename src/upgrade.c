@@ -11,7 +11,13 @@ static const char* upgrade_names[] = {
     "VITALITY",
     "ORBITERS",
     "BEAM",
-    "NOVA"
+    "NOVA",
+    "ORB COUNT",
+    "ORB ORBIT",
+    "BEAM WIDTH",
+    "BEAM RATE",
+    "NOVA RANGE",
+    "NOVA POWER"
 };
 
 static const char* upgrade_descs[] = {
@@ -22,8 +28,14 @@ static const char* upgrade_descs[] = {
     "Pickup range +34",
     "Max HP +1",
     "Orbiting shields",
-    "Rotating laser",
-    "Pulse wave"
+    "Sweeping laser",
+    "Pulse wave",
+    "Orbiters +1",
+    "Orbit radius +20",
+    "Beam width +4",
+    "Beam interval x0.8",
+    "Nova range +30",
+    "Nova damage +1"
 };
 
 static Color upgrade_colors[] = {
@@ -35,6 +47,12 @@ static Color upgrade_colors[] = {
     {255, 100, 200, 255},
     {100, 150, 255, 255},
     {255, 80, 80, 255},
+    {255, 100, 255, 255},
+    {100, 150, 255, 255},
+    {100, 150, 255, 255},
+    {255, 80, 80, 255},
+    {255, 80, 80, 255},
+    {255, 100, 255, 255},
     {255, 100, 255, 255}
 };
 
@@ -50,6 +68,16 @@ static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
             return !gs->has_beam;
         case UPGRADE_NOVA:
             return !gs->has_nova;
+        case UPGRADE_ORBITER_COUNT:
+            return gs->has_orbiters && gs->orbiter_count < MAX_ORBITERS;
+        case UPGRADE_ORBITER_RADIUS:
+            return gs->has_orbiters;
+        case UPGRADE_BEAM_WIDTH:
+        case UPGRADE_BEAM_INTERVAL:
+            return gs->has_beam;
+        case UPGRADE_NOVA_RANGE:
+        case UPGRADE_NOVA_DAMAGE:
+            return gs->has_nova;
         default:
             return true;
     }
@@ -112,6 +140,28 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
             break;
         case UPGRADE_NOVA:
             nova_init(gs);
+            break;
+        case UPGRADE_ORBITER_COUNT:
+            if (gs->orbiter_count < MAX_ORBITERS) {
+                gs->orbiters[gs->orbiter_count].active = true;
+                gs->orbiters[gs->orbiter_count].angle = 0;
+                gs->orbiter_count += UPGRADE_ORBITER_COUNT_ADD;
+            }
+            break;
+        case UPGRADE_ORBITER_RADIUS:
+            gs->orbiter_orbit_radius += UPGRADE_ORBITER_RADIUS_ADD;
+            break;
+        case UPGRADE_BEAM_WIDTH:
+            gs->beam_width += UPGRADE_BEAM_WIDTH_ADD;
+            break;
+        case UPGRADE_BEAM_INTERVAL:
+            gs->beam_interval *= UPGRADE_BEAM_INTERVAL_MULT;
+            break;
+        case UPGRADE_NOVA_RANGE:
+            gs->nova_max_radius += UPGRADE_NOVA_RANGE_ADD;
+            break;
+        case UPGRADE_NOVA_DAMAGE:
+            gs->nova_damage += UPGRADE_NOVA_DAMAGE_ADD;
             break;
         default:
             break;

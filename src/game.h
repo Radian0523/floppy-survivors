@@ -6,15 +6,26 @@
 #include <stdbool.h>
 
 typedef enum {
+    // Base upgrades
     UPGRADE_RAPID_FIRE,
     UPGRADE_MULTI_SHOT,
     UPGRADE_POWER,
     UPGRADE_SPEED,
     UPGRADE_MAGNET,
     UPGRADE_VITALITY,
+    // Weapon unlocks
     UPGRADE_ORBITERS,
     UPGRADE_BEAM,
     UPGRADE_NOVA,
+    // Orbiters upgrades
+    UPGRADE_ORBITER_COUNT,
+    UPGRADE_ORBITER_RADIUS,
+    // Beam upgrades
+    UPGRADE_BEAM_WIDTH,
+    UPGRADE_BEAM_INTERVAL,
+    // Nova upgrades
+    UPGRADE_NOVA_RANGE,
+    UPGRADE_NOVA_DAMAGE,
     UPGRADE_COUNT
 } UpgradeType;
 
@@ -109,6 +120,7 @@ typedef struct {
     float beam_interval;
     int beam_damage;
     float beam_length;
+    float beam_width;
 
     // Nova
     bool has_nova;

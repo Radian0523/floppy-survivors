@@ -184,6 +184,7 @@ void beam_init(GameState *gs) {
     gs->beam_interval = BEAM_INTERVAL;
     gs->beam_damage = BEAM_DAMAGE;
     gs->beam_length = BEAM_LENGTH;
+    gs->beam_width = BEAM_WIDTH;
 }
 
 void beam_update(GameState *gs, float dt) {
@@ -212,7 +213,7 @@ void beam_update(GameState *gs, float dt) {
             if (proj < 0 || proj > gs->beam_length) continue;
 
             float perp = fabsf(-dx * sin_a + dy * cos_a);
-            if (perp < BEAM_WIDTH / 2 + gs->enemies[i].radius) {
+            if (perp < gs->beam_width / 2 + gs->enemies[i].radius) {
                 gs->enemies[i].hp -= gs->beam_damage;
                 if (gs->enemies[i].hp <= 0) {
                     kill_enemy(gs, i);
@@ -239,7 +240,7 @@ void beam_draw(const GameState *gs, float scale, Vector2 offset) {
     float ex = (gs->player.pos.x + cosf(gs->beam.angle) * gs->beam_length) * scale + offset.x;
     float ey = (gs->player.pos.y + sinf(gs->beam.angle) * gs->beam_length) * scale + offset.y;
 
-    float w = BEAM_WIDTH * scale;
+    float w = gs->beam_width * scale;
 
     DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w, (Color){255, 50, 50, 200});
     DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w * 0.5f, (Color){255, 150, 150, 255});
