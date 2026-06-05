@@ -80,6 +80,8 @@ static void fire_bullet(GameState *gs, Vector2 dir) {
 }
 
 void weapon_update(GameState *gs, float dt) {
+    if (!gs->has_pulse_bolt) return;
+
     gs->fire_timer -= dt;
     if (gs->fire_timer <= 0) {
         gs->fire_timer = gs->fire_interval;

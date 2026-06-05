@@ -41,6 +41,7 @@ static void game_init(GameState *gs) {
     gs->level = 1;
     gs->xp_to_next = XP_BASE_REQUIREMENT;
 
+    gs->has_pulse_bolt = false;
     gs->fire_timer = 0;
     gs->fire_interval = WEAPON_FIRE_INTERVAL;
     gs->bullet_count = 1;
@@ -66,6 +67,27 @@ static void game_init(GameState *gs) {
 
     gs->upgrading = false;
     gs->upgrade_hover = -1;
+}
+
+void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
+    game_init(gs);
+    switch (weapon) {
+        case STARTING_WEAPON_PULSE:
+            gs->has_pulse_bolt = true;
+            break;
+        case STARTING_WEAPON_ORBITERS:
+            orbiters_init(gs);
+            break;
+        case STARTING_WEAPON_BEAM:
+            beam_init(gs);
+            break;
+        case STARTING_WEAPON_NOVA:
+            nova_init(gs);
+            break;
+        default:
+            gs->has_pulse_bolt = true;
+            break;
+    }
 }
 
 static void draw_hud(const GameState *gs) {
@@ -186,24 +208,16 @@ int main(void) {
     gs.scene_timer = 0;
     game_init(&gs);
 
-    GameScene prev_scene = SCENE_TITLE;
-
     while (!WindowShouldClose()) {
         float dt = GetFrameTime();
         if (dt > DT_MAX) dt = DT_MAX;
 
         switch (gs.scene) {
             case SCENE_TITLE:
-                if (prev_scene != SCENE_TITLE) {
-                    game_init(&gs);
-                    gs.scene = SCENE_TITLE;
-                    gs.scene_timer = 0;
-                }
                 scene_title_update(&gs, dt);
-                if (gs.scene == SCENE_GAME) {
-                    game_init(&gs);
-                    gs.scene = SCENE_GAME;
-                }
+                break;
+            case SCENE_WEAPON_SELECT:
+                scene_weapon_select_update(&gs, dt);
                 break;
             case SCENE_GAME:
                 update_game(&gs, dt);
@@ -212,10 +226,9 @@ int main(void) {
                 scene_result_update(&gs, dt);
                 break;
         }
-        prev_scene = gs.scene;
 
         BeginTextureMode(target);
-        if (gs.scene == SCENE_TITLE) {
+        if (gs.scene == SCENE_TITLE || gs.scene == SCENE_WEAPON_SELECT) {
             render_background();
         } else {
             draw_game_world(&gs);
@@ -234,6 +247,9 @@ int main(void) {
         switch (gs.scene) {
             case SCENE_TITLE:
                 scene_title_draw(&gs);
+                break;
+            case SCENE_WEAPON_SELECT:
+                scene_weapon_select_draw(&gs);
                 break;
             case SCENE_GAME:
                 draw_hud(&gs);

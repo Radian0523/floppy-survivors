@@ -7,9 +7,18 @@
 
 typedef enum {
     SCENE_TITLE,
+    SCENE_WEAPON_SELECT,
     SCENE_GAME,
     SCENE_RESULT
 } GameScene;
+
+typedef enum {
+    STARTING_WEAPON_PULSE,
+    STARTING_WEAPON_ORBITERS,
+    STARTING_WEAPON_BEAM,
+    STARTING_WEAPON_NOVA,
+    STARTING_WEAPON_COUNT
+} StartingWeapon;
 
 typedef enum {
     // Base upgrades
@@ -130,6 +139,7 @@ typedef struct {
     int xp_to_next;
 
     // Pulse Bolt
+    bool has_pulse_bolt;
     float fire_timer;
     float fire_interval;
     int bullet_count;
@@ -174,6 +184,7 @@ typedef struct {
 
     GameScene scene;
     float scene_timer;
+    int weapon_select_hover;
 
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
@@ -223,8 +234,12 @@ void shake_add(GameState *gs, float amount);
 
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);
+void scene_weapon_select_update(GameState *gs, float dt);
+void scene_weapon_select_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);
 void scene_result_draw(const GameState *gs);
+
+void game_start_with_weapon(GameState *gs, StartingWeapon weapon);
 
 typedef enum {
     SFX_SHOOT,
