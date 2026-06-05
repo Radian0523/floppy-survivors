@@ -25,6 +25,11 @@ static void game_init(GameState *gs) {
     gs->bullet_count = 1;
     gs->bullet_damage = BULLET_DAMAGE;
 
+    gs->has_orbiters = false;
+    gs->orbiter_count = 0;
+    gs->has_beam = false;
+    gs->has_nova = false;
+
     gs->spawn_timer = 1.0f;
     gs->spawn_interval = SPAWN_INTERVAL_INITIAL;
 
@@ -95,6 +100,9 @@ int main(void) {
                 player_update(&gs.player, dt, gs.scale);
                 weapon_update(&gs, dt);
                 bullet_update(&gs, dt);
+                orbiters_update(&gs, dt);
+                beam_update(&gs, dt);
+                nova_update(&gs, dt);
                 enemy_update(&gs, dt);
                 gem_update(&gs, dt);
             }
@@ -109,6 +117,9 @@ int main(void) {
         BeginBlendMode(BLEND_ADDITIVE);
 
         bullet_draw(gs.bullets, gs.scale, gs.offset);
+        orbiters_draw(&gs, gs.scale, gs.offset);
+        beam_draw(&gs, gs.scale, gs.offset);
+        nova_draw(&gs, gs.scale, gs.offset);
         enemy_draw(gs.enemies, gs.scale, gs.offset);
         gem_draw(gs.gems, gs.scale, gs.offset);
         player_draw(&gs.player, gs.scale, gs.offset);

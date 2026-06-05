@@ -23,6 +23,28 @@
 #define BULLET_RADIUS 4.0f
 #define MAX_BULLETS 256
 
+// Orbiters
+#define ORBITER_COUNT_BASE 2
+#define ORBITER_RADIUS 8.0f
+#define ORBITER_ORBIT_RADIUS 50.0f
+#define ORBITER_SPEED 3.0f
+#define ORBITER_DAMAGE 1
+#define MAX_ORBITERS 8
+
+// Beam
+#define BEAM_INTERVAL 2.5f
+#define BEAM_DURATION 0.8f
+#define BEAM_LENGTH 300.0f
+#define BEAM_WIDTH 8.0f
+#define BEAM_DAMAGE 2
+#define BEAM_SWEEP_ANGLE 0.7f
+
+// Nova
+#define NOVA_INTERVAL 3.0f
+#define NOVA_RADIUS_BASE 80.0f
+#define NOVA_DAMAGE 1
+#define NOVA_EXPAND_SPEED 400.0f
+
 // Enemy
 #define ENEMY_BASE_HP 2
 #define ENEMY_BASE_SPEED 54.0f

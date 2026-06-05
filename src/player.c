@@ -7,6 +7,7 @@ void player_init(Player *p, float scale) {
     p->pos.y = LOGICAL_H / 2.0f;
     p->vel.x = 0;
     p->vel.y = 0;
+    p->facing_angle = 0;
     p->hp = PLAYER_MAX_HP;
     p->max_hp = PLAYER_MAX_HP;
     p->invincible_timer = 0;
@@ -28,6 +29,10 @@ void player_update(Player *p, float dt, float scale) {
 
     p->vel.x = dir.x * p->speed;
     p->vel.y = dir.y * p->speed;
+
+    if (dir.x != 0 || dir.y != 0) {
+        p->facing_angle = atan2f(dir.y, dir.x);
+    }
 
     p->pos.x += p->vel.x * dt;
     p->pos.y += p->vel.y * dt;

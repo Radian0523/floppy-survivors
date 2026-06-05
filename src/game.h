@@ -12,12 +12,16 @@ typedef enum {
     UPGRADE_SPEED,
     UPGRADE_MAGNET,
     UPGRADE_VITALITY,
+    UPGRADE_ORBITERS,
+    UPGRADE_BEAM,
+    UPGRADE_NOVA,
     UPGRADE_COUNT
 } UpgradeType;
 
 typedef struct {
     Vector2 pos;
     Vector2 vel;
+    float facing_angle;
     int hp;
     int max_hp;
     float invincible_timer;
@@ -30,6 +34,25 @@ typedef struct {
     Vector2 vel;
     bool active;
 } Bullet;
+
+typedef struct {
+    float angle;
+    bool active;
+} Orbiter;
+
+typedef struct {
+    float angle;
+    float center_angle;
+    float timer;
+    bool firing;
+    float fire_timer;
+} BeamState;
+
+typedef struct {
+    float timer;
+    float current_radius;
+    bool expanding;
+} NovaState;
 
 typedef struct {
     Vector2 pos;
@@ -54,10 +77,32 @@ typedef struct {
     int level;
     int xp_to_next;
 
+    // Pulse Bolt
     float fire_timer;
     float fire_interval;
     int bullet_count;
     int bullet_damage;
+
+    // Orbiters
+    bool has_orbiters;
+    Orbiter orbiters[MAX_ORBITERS];
+    int orbiter_count;
+    int orbiter_damage;
+    float orbiter_orbit_radius;
+
+    // Beam
+    bool has_beam;
+    BeamState beam;
+    float beam_interval;
+    int beam_damage;
+    float beam_length;
+
+    // Nova
+    bool has_nova;
+    NovaState nova;
+    float nova_interval;
+    int nova_damage;
+    float nova_max_radius;
 
     float spawn_timer;
     float spawn_interval;
@@ -85,6 +130,18 @@ void player_draw(const Player *p, float scale, Vector2 offset);
 void weapon_update(GameState *gs, float dt);
 void bullet_update(GameState *gs, float dt);
 void bullet_draw(const Bullet bullets[], float scale, Vector2 offset);
+
+void orbiters_init(GameState *gs);
+void orbiters_update(GameState *gs, float dt);
+void orbiters_draw(const GameState *gs, float scale, Vector2 offset);
+
+void beam_init(GameState *gs);
+void beam_update(GameState *gs, float dt);
+void beam_draw(const GameState *gs, float scale, Vector2 offset);
+
+void nova_init(GameState *gs);
+void nova_update(GameState *gs, float dt);
+void nova_draw(const GameState *gs, float scale, Vector2 offset);
 
 void enemy_spawn(GameState *gs);
 void enemy_update(GameState *gs, float dt);

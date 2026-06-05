@@ -8,7 +8,10 @@ static const char* upgrade_names[] = {
     "POWER",
     "SPEED",
     "MAGNET",
-    "VITALITY"
+    "VITALITY",
+    "ORBITERS",
+    "BEAM",
+    "NOVA"
 };
 
 static const char* upgrade_descs[] = {
@@ -17,7 +20,10 @@ static const char* upgrade_descs[] = {
     "Damage +1",
     "Move speed x1.12",
     "Pickup range +34",
-    "Max HP +1"
+    "Max HP +1",
+    "Orbiting shields",
+    "Rotating laser",
+    "Pulse wave"
 };
 
 static Color upgrade_colors[] = {
@@ -26,11 +32,27 @@ static Color upgrade_colors[] = {
     {255, 100, 100, 255},
     {100, 255, 200, 255},
     {200, 100, 255, 255},
-    {255, 100, 200, 255}
+    {255, 100, 200, 255},
+    {100, 150, 255, 255},
+    {255, 80, 80, 255},
+    {255, 100, 255, 255}
 };
 
 const char* upgrade_get_name(UpgradeType type) {
     return upgrade_names[type];
+}
+
+static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
+    switch (type) {
+        case UPGRADE_ORBITERS:
+            return !gs->has_orbiters;
+        case UPGRADE_BEAM:
+            return !gs->has_beam;
+        case UPGRADE_NOVA:
+            return !gs->has_nova;
+        default:
+            return true;
+    }
 }
 
 void upgrade_start(GameState *gs) {
@@ -38,10 +60,23 @@ void upgrade_start(GameState *gs) {
     gs->upgrade_hover = -1;
 
     bool used[UPGRADE_COUNT] = {false};
+
+    for (int i = 0; i < UPGRADE_COUNT; i++) {
+        if (!is_upgrade_available(gs, i)) {
+            used[i] = true;
+        }
+    }
+
     for (int i = 0; i < UPGRADE_CHOICES; i++) {
         int choice;
+        int attempts = 0;
         do {
             choice = rand() % UPGRADE_COUNT;
+            attempts++;
+            if (attempts > 100) {
+                choice = rand() % 6;
+                break;
+            }
         } while (used[choice]);
         used[choice] = true;
         gs->upgrade_choices[i] = choice;
@@ -68,6 +103,15 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
         case UPGRADE_VITALITY:
             gs->player.max_hp += UPGRADE_VITALITY_ADD;
             gs->player.hp += UPGRADE_VITALITY_ADD;
+            break;
+        case UPGRADE_ORBITERS:
+            orbiters_init(gs);
+            break;
+        case UPGRADE_BEAM:
+            beam_init(gs);
+            break;
+        case UPGRADE_NOVA:
+            nova_init(gs);
             break;
         default:
             break;
