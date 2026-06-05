@@ -45,6 +45,45 @@
 #define NOVA_DAMAGE 1
 #define NOVA_EXPAND_SPEED 400.0f
 
+// Spark Mines
+#define MINE_INTERVAL 2.5f
+#define MINE_LIFE 8.0f
+#define MINE_RADIUS 10.0f
+#define MINE_EXPLOSION_RADIUS 40.0f
+#define MINE_DAMAGE 2
+#define MAX_MINES 16
+
+// Chain Lightning
+#define CHAIN_INTERVAL 2.0f
+#define CHAIN_RANGE 120.0f
+#define CHAIN_JUMP_RANGE 80.0f
+#define CHAIN_JUMPS 3
+#define CHAIN_DAMAGE 1
+#define CHAIN_VISUAL_LIFE 0.25f
+#define CHAIN_MAX_POINTS 8
+
+// Boomerang
+#define BOOMERANG_INTERVAL 1.5f
+#define BOOMERANG_SPEED 280.0f
+#define BOOMERANG_RANGE 180.0f
+#define BOOMERANG_RADIUS 10.0f
+#define BOOMERANG_DAMAGE 1
+#define MAX_BOOMERANGS 8
+
+// Trail
+#define TRAIL_INTERVAL 0.12f
+#define TRAIL_LIFE 1.2f
+#define TRAIL_RADIUS 8.0f
+#define TRAIL_DAMAGE 1
+#define MAX_TRAIL_MARKS 64
+
+// Whip
+#define WHIP_INTERVAL 1.4f
+#define WHIP_ANIM 0.25f
+#define WHIP_RANGE 70.0f
+#define WHIP_ARC 2.0f
+#define WHIP_DAMAGE 2
+
 // Enemy
 #define ENEMY_BASE_HP 2
 #define ENEMY_BASE_SPEED 54.0f

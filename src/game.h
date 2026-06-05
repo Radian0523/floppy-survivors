@@ -32,6 +32,11 @@ typedef enum {
     UPGRADE_ORBITERS,
     UPGRADE_BEAM,
     UPGRADE_NOVA,
+    UPGRADE_MINES,
+    UPGRADE_CHAIN,
+    UPGRADE_BOOMERANG,
+    UPGRADE_TRAIL,
+    UPGRADE_WHIP,
     // Orbiters upgrades
     UPGRADE_ORBITER_COUNT,
     UPGRADE_ORBITER_RADIUS,
@@ -79,6 +84,32 @@ typedef struct {
     float current_radius;
     bool expanding;
 } NovaState;
+
+typedef struct {
+    Vector2 pos;
+    float life;
+    bool active;
+} Mine;
+
+typedef struct {
+    Vector2 points[CHAIN_MAX_POINTS];
+    int count;
+    float life;
+} ChainVisual;
+
+typedef struct {
+    Vector2 pos;
+    Vector2 dir;
+    float traveled;
+    bool returning;
+    bool active;
+} BoomerangProj;
+
+typedef struct {
+    Vector2 pos;
+    float life;
+    bool active;
+} TrailMark;
 
 typedef enum {
     ENEMY_BIT,
@@ -190,6 +221,41 @@ typedef struct {
     int nova_damage;
     float nova_max_radius;
 
+    // Spark Mines
+    bool has_mines;
+    Mine mines[MAX_MINES];
+    float mine_timer;
+    float mine_interval;
+    int mine_damage;
+
+    // Chain Lightning
+    bool has_chain;
+    float chain_timer;
+    float chain_interval;
+    int chain_jumps;
+    int chain_damage;
+    ChainVisual chain_visual;
+
+    // Boomerang
+    bool has_boomerang;
+    BoomerangProj boomerangs[MAX_BOOMERANGS];
+    float boomerang_timer;
+    float boomerang_interval;
+    int boomerang_damage;
+
+    // Trail
+    bool has_trail;
+    TrailMark trail[MAX_TRAIL_MARKS];
+    float trail_timer;
+    int trail_damage;
+
+    // Whip
+    bool has_whip;
+    float whip_timer;
+    float whip_anim;
+    float whip_interval;
+    int whip_damage;
+
     float spawn_timer;
     float spawn_interval;
 
@@ -244,6 +310,26 @@ void beam_draw(const GameState *gs, float scale, Vector2 offset);
 void nova_init(GameState *gs);
 void nova_update(GameState *gs, float dt);
 void nova_draw(const GameState *gs, float scale, Vector2 offset);
+
+void mines_init(GameState *gs);
+void mines_update(GameState *gs, float dt);
+void mines_draw(const GameState *gs, float scale, Vector2 offset);
+
+void chain_init(GameState *gs);
+void chain_update(GameState *gs, float dt);
+void chain_draw(const GameState *gs, float scale, Vector2 offset);
+
+void boomerang_init(GameState *gs);
+void boomerang_update(GameState *gs, float dt);
+void boomerang_draw(const GameState *gs, float scale, Vector2 offset);
+
+void trail_init(GameState *gs);
+void trail_update(GameState *gs, float dt);
+void trail_draw(const GameState *gs, float scale, Vector2 offset);
+
+void whip_init(GameState *gs);
+void whip_update(GameState *gs, float dt);
+void whip_draw(const GameState *gs, float scale, Vector2 offset);
 
 void enemy_spawn(GameState *gs);
 void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos);

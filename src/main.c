@@ -52,6 +52,11 @@ static void game_init(GameState *gs) {
     gs->orbiter_count = 0;
     gs->has_beam = false;
     gs->has_nova = false;
+    gs->has_mines = false;
+    gs->has_chain = false;
+    gs->has_boomerang = false;
+    gs->has_trail = false;
+    gs->has_whip = false;
 
     gs->spawn_timer = 1.0f;
     gs->spawn_interval = SPAWN_INTERVAL_INITIAL;
@@ -177,6 +182,11 @@ static void update_game(GameState *gs, float dt) {
     orbiters_update(gs, dt);
     beam_update(gs, dt);
     nova_update(gs, dt);
+    mines_update(gs, dt);
+    chain_update(gs, dt);
+    boomerang_update(gs, dt);
+    trail_update(gs, dt);
+    whip_update(gs, dt);
     enemy_update(gs, dt);
     enemy_bullets_update(gs, dt);
     boss_update(gs, dt);
@@ -196,10 +206,15 @@ static void draw_game_world(const GameState *gs) {
     render_background();
     BeginBlendMode(BLEND_ADDITIVE);
 
+    trail_draw(gs, gs->scale, shake_offset);
+    mines_draw(gs, gs->scale, shake_offset);
     bullet_draw(gs->bullets, gs->scale, shake_offset);
     orbiters_draw(gs, gs->scale, shake_offset);
     beam_draw(gs, gs->scale, shake_offset);
     nova_draw(gs, gs->scale, shake_offset);
+    chain_draw(gs, gs->scale, shake_offset);
+    boomerang_draw(gs, gs->scale, shake_offset);
+    whip_draw(gs, gs->scale, shake_offset);
     enemy_draw(gs->enemies, gs->scale, shake_offset);
     enemy_bullets_draw(gs, gs->scale, shake_offset);
     boss_draw(gs, gs->scale, shake_offset);

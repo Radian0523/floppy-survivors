@@ -12,6 +12,11 @@ static const char* upgrade_names[] = {
     "ORBITERS",
     "BEAM",
     "NOVA",
+    "MINES",
+    "CHAIN",
+    "BOOMERANG",
+    "TRAIL",
+    "WHIP",
     "ORB COUNT",
     "ORB ORBIT",
     "BEAM WIDTH",
@@ -30,6 +35,11 @@ static const char* upgrade_descs[] = {
     "Orbiting shields",
     "Sweeping laser",
     "Pulse wave",
+    "Deploy spark mines",
+    "Lightning chain",
+    "Returning blade",
+    "Damaging trail",
+    "Melee arc swing",
     "Orbiters +1",
     "Orbit radius +20",
     "Beam width +4",
@@ -43,11 +53,16 @@ static Color upgrade_colors[] = {
     {100, 200, 255, 255},   // MULTI SHOT
     {255, 255, 150, 255},   // POWER
     {120, 255, 200, 255},   // SPEED
-    {120, 255, 120, 255},   // MAGNET - green (item-like)
+    {120, 255, 120, 255},   // MAGNET - green
     {120, 255, 120, 255},   // VITALITY - green
     {100, 150, 255, 255},   // ORBITERS - blue
     {180, 80, 255, 255},    // BEAM - violet
     {100, 255, 255, 255},   // NOVA - cyan
+    {255, 220, 100, 255},   // MINES - golden
+    {200, 240, 255, 255},   // CHAIN - light cyan
+    {150, 255, 180, 255},   // BOOMERANG - light green
+    {120, 220, 255, 255},   // TRAIL - light blue
+    {220, 220, 255, 255},   // WHIP - silver white
     {100, 150, 255, 255},   // ORB COUNT
     {100, 150, 255, 255},   // ORB ORBIT
     {180, 80, 255, 255},    // BEAM WIDTH
@@ -62,12 +77,14 @@ const char* upgrade_get_name(UpgradeType type) {
 
 static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
     switch (type) {
-        case UPGRADE_ORBITERS:
-            return !gs->has_orbiters;
-        case UPGRADE_BEAM:
-            return !gs->has_beam;
-        case UPGRADE_NOVA:
-            return !gs->has_nova;
+        case UPGRADE_ORBITERS:    return !gs->has_orbiters;
+        case UPGRADE_BEAM:        return !gs->has_beam;
+        case UPGRADE_NOVA:        return !gs->has_nova;
+        case UPGRADE_MINES:       return !gs->has_mines;
+        case UPGRADE_CHAIN:       return !gs->has_chain;
+        case UPGRADE_BOOMERANG:   return !gs->has_boomerang;
+        case UPGRADE_TRAIL:       return !gs->has_trail;
+        case UPGRADE_WHIP:        return !gs->has_whip;
         case UPGRADE_ORBITER_COUNT:
             return gs->has_orbiters && gs->orbiter_count < MAX_ORBITERS;
         case UPGRADE_ORBITER_RADIUS:
@@ -140,6 +157,21 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
             break;
         case UPGRADE_NOVA:
             nova_init(gs);
+            break;
+        case UPGRADE_MINES:
+            mines_init(gs);
+            break;
+        case UPGRADE_CHAIN:
+            chain_init(gs);
+            break;
+        case UPGRADE_BOOMERANG:
+            boomerang_init(gs);
+            break;
+        case UPGRADE_TRAIL:
+            trail_init(gs);
+            break;
+        case UPGRADE_WHIP:
+            whip_init(gs);
             break;
         case UPGRADE_ORBITER_COUNT:
             if (gs->orbiter_count < MAX_ORBITERS) {
