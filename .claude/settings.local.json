@@ -10,7 +10,19 @@
       "Bash(curl -L -o raylib-5.5_win64_mingw-w64.zip \"https://github.com/raysan5/raylib/releases/download/5.5/raylib-5.5_win64_mingw-w64.zip\")",
       "Bash(unzip -o raylib-5.5_win64_mingw-w64.zip)",
       "Bash(make win *)",
-      "Bash(pkill -f disk_survivor)"
+      "Bash(pkill -f disk_survivor)",
+      "Bash(curl -L -o raylib-5.5.tar.gz \"https://github.com/raysan5/raylib/archive/refs/tags/5.5.tar.gz\")",
+      "Bash(tar -xzf raylib-5.5.tar.gz)",
+      "Bash(make clean *)",
+      "Bash(make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PLATFORM=PLATFORM_DESKTOP OS=Windows_NT RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE)",
+      "Bash(make raylib-win *)",
+      "Bash(make raylibwin *)",
+      "Bash(make -p)",
+      "Bash(make -f Makefile raylibwin)",
+      "Bash(make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PLATFORM=PLATFORM_DESKTOP OS=Windows_NT RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")",
+      "Bash(make -B win)",
+      "Bash(make -B mac)",
+      "Bash(make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")"
     ]
   }
 }
