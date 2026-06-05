@@ -208,6 +208,24 @@ void scene_title_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);
 void scene_result_draw(const GameState *gs);
 
+typedef enum {
+    SFX_SHOOT,
+    SFX_ENEMY_HIT,
+    SFX_ENEMY_DIE,
+    SFX_PLAYER_HIT,
+    SFX_LEVEL_UP,
+    SFX_GEM_PICKUP,
+    SFX_BOSS_SPAWN,
+    SFX_BOSS_HIT,
+    SFX_NOVA,
+    SFX_BEAM,
+    SFX_COUNT
+} SfxId;
+
+void audio_init(void);
+void audio_play(SfxId id);
+void audio_cleanup(void);
+
 void gem_spawn(GameState *gs, Vector2 pos);
 void gem_update(GameState *gs, float dt);
 void gem_draw(const Gem gems[], float scale, Vector2 offset);

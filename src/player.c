@@ -49,6 +49,7 @@ void player_take_damage(Player *p, int damage) {
     p->hp -= damage;
     if (p->hp < 0) p->hp = 0;
     p->invincible_timer = PLAYER_INVINCIBLE_TIME;
+    audio_play(SFX_PLAYER_HIT);
 }
 
 void player_draw(const Player *p, float scale, Vector2 offset) {

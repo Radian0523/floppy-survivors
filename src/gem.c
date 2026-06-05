@@ -31,12 +31,14 @@ void gem_update(GameState *gs, float dt) {
         if (dist < PLAYER_RADIUS + GEM_RADIUS) {
             g->active = false;
             gs->xp += GEM_XP_VALUE;
+            audio_play(SFX_GEM_PICKUP);
 
             if (gs->xp >= gs->xp_to_next) {
                 gs->xp -= gs->xp_to_next;
                 gs->level++;
                 gs->xp_to_next += XP_PER_LEVEL;
                 upgrade_start(gs);
+                audio_play(SFX_LEVEL_UP);
             }
         }
     }

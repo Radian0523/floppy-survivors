@@ -7,6 +7,7 @@ void boss_spawn(GameState *gs) {
     b->active = true;
     b->hp = BOSS_HP;
     b->max_hp = BOSS_HP;
+    audio_play(SFX_BOSS_SPAWN);
 
     int side = rand() % 4;
     switch (side) {
@@ -93,6 +94,7 @@ void boss_take_damage(GameState *gs, int damage) {
     if (!b->active) return;
 
     b->hp -= damage;
+    audio_play(SFX_BOSS_HIT);
     if (b->hp <= 0) {
         b->active = false;
         gs->boss_defeated = true;

@@ -10,6 +10,7 @@ static void kill_enemy(GameState *gs, int idx) {
     gem_spawn(gs, pos);
     e->active = false;
     gs->kills++;
+    audio_play(SFX_ENEMY_DIE);
 
     if (type == ENEMY_SPLITTER) {
         for (int i = 0; i < SPLITTER_CHILD_COUNT; i++) {
@@ -80,6 +81,7 @@ void weapon_update(GameState *gs, float dt) {
                 for (int i = 0; i < gs->bullet_count; i++) {
                     fire_bullet(gs, dir);
                 }
+                audio_play(SFX_SHOOT);
             }
         }
     }
@@ -273,6 +275,7 @@ void beam_update(GameState *gs, float dt) {
             gs->beam.fire_timer = BEAM_DURATION;
             gs->beam.center_angle = gs->player.facing_angle;
             gs->beam.angle = gs->beam.center_angle + BEAM_SWEEP_ANGLE;
+            audio_play(SFX_BEAM);
         }
     }
 }
@@ -348,6 +351,7 @@ void nova_update(GameState *gs, float dt) {
         if (gs->nova.timer <= 0) {
             gs->nova.expanding = true;
             gs->nova.current_radius = 0;
+            audio_play(SFX_NOVA);
         }
     }
 }

@@ -160,6 +160,7 @@ int main(void) {
 
     InitWindow(WINDOW_W, WINDOW_H, "DISK SURVIVOR");
     SetTargetFPS(TARGET_FPS);
+    audio_init();
 
     RenderTexture2D target = LoadRenderTexture(WINDOW_W, WINDOW_H);
     Shader bloom = LoadShaderFromMemory(0, bloomShaderCode);
@@ -237,6 +238,7 @@ int main(void) {
 
     UnloadShader(bloom);
     UnloadRenderTexture(target);
+    audio_cleanup();
     CloseWindow();
     return 0;
 }
