@@ -241,6 +241,30 @@ void scene_weapon_select_draw(const GameState *gs) {
     DrawText(back, (sw - bw) / 2, sh - 30, bs, (Color){120, 120, 140, 200});
 }
 
+void pause_draw(const GameState *gs) {
+    (void)gs;
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 0, 180});
+
+    const char *title = "PAUSED";
+    int title_size = 56;
+    int tw = MeasureText(title, title_size);
+    DrawText(title, (sw - tw) / 2, sh / 2 - 80, title_size,
+        (Color){100, 255, 255, 255});
+
+    const char *line1 = "ESC / SPACE  -  Resume";
+    int s1 = 18;
+    int w1 = MeasureText(line1, s1);
+    DrawText(line1, (sw - w1) / 2, sh / 2 + 10, s1, (Color){220, 220, 240, 255});
+
+    const char *line2 = "Q  -  Return to Title";
+    int s2 = 18;
+    int w2 = MeasureText(line2, s2);
+    DrawText(line2, (sw - w2) / 2, sh / 2 + 40, s2, (Color){220, 220, 240, 255});
+}
+
 void scene_result_update(GameState *gs, float dt) {
     gs->scene_timer += dt;
 

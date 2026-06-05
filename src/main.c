@@ -67,6 +67,7 @@ static void game_init(GameState *gs) {
 
     gs->upgrading = false;
     gs->upgrade_hover = -1;
+    gs->paused = false;
 }
 
 void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
@@ -117,8 +118,25 @@ static void draw_hud(const GameState *gs) {
 }
 
 static void update_game(GameState *gs, float dt) {
+    if (gs->paused) {
+        if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
+            gs->paused = false;
+        }
+        if (IsKeyPressed(KEY_Q)) {
+            gs->paused = false;
+            gs->scene = SCENE_TITLE;
+            gs->scene_timer = 0;
+        }
+        return;
+    }
+
     if (gs->upgrading) {
         upgrade_update(gs);
+        return;
+    }
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        gs->paused = true;
         return;
     }
 
@@ -196,6 +214,7 @@ int main(void) {
 
     InitWindow(WINDOW_W, WINDOW_H, "DISK SURVIVOR");
     SetTargetFPS(TARGET_FPS);
+    SetExitKey(KEY_NULL);
     audio_init();
 
     RenderTexture2D target = LoadRenderTexture(WINDOW_W, WINDOW_H);
@@ -257,6 +276,7 @@ int main(void) {
                 flash_draw(&gs);
                 draw_hud(&gs);
                 if (gs.upgrading) upgrade_draw(&gs);
+                if (gs.paused) pause_draw(&gs);
                 break;
             case SCENE_RESULT:
                 draw_hud(&gs);

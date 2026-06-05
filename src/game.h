@@ -197,6 +197,7 @@ typedef struct {
     GameScene scene;
     float scene_timer;
     int weapon_select_hover;
+    bool paused;
 
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
@@ -256,6 +257,7 @@ void scene_weapon_select_update(GameState *gs, float dt);
 void scene_weapon_select_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);
 void scene_result_draw(const GameState *gs);
+void pause_draw(const GameState *gs);
 
 void game_start_with_weapon(GameState *gs, StartingWeapon weapon);
 
