@@ -220,6 +220,8 @@ int main(void) {
     SetTargetFPS(TARGET_FPS);
     SetExitKey(KEY_NULL);
     audio_init();
+    bgm_init();
+    bgm_play(BGM_TITLE);
 
     RenderTexture2D target = LoadRenderTexture(WINDOW_W, WINDOW_H);
     Shader bloom = LoadShaderFromMemory(0, bloomShaderCode);
@@ -239,15 +241,19 @@ int main(void) {
 
         switch (gs.scene) {
             case SCENE_TITLE:
+                bgm_play(BGM_TITLE);
                 scene_title_update(&gs, dt);
                 break;
             case SCENE_WEAPON_SELECT:
+                bgm_play(BGM_TITLE);
                 scene_weapon_select_update(&gs, dt);
                 break;
             case SCENE_GAME:
+                bgm_play(gs.boss.active ? BGM_BOSS : BGM_GAME);
                 update_game(&gs, dt);
                 break;
             case SCENE_RESULT:
+                bgm_play(BGM_TITLE);
                 scene_result_update(&gs, dt);
                 break;
         }
@@ -293,6 +299,7 @@ int main(void) {
 
     UnloadShader(bloom);
     UnloadRenderTexture(target);
+    bgm_cleanup();
     audio_cleanup();
     CloseWindow();
     return 0;

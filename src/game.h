@@ -298,6 +298,19 @@ void audio_init(void);
 void audio_play(SfxId id);
 void audio_cleanup(void);
 
+typedef enum {
+    BGM_NONE,
+    BGM_TITLE,
+    BGM_GAME,
+    BGM_BOSS,
+    BGM_COUNT
+} BgmId;
+
+void bgm_init(void);
+void bgm_play(BgmId id);
+void bgm_stop(void);
+void bgm_cleanup(void);
+
 void gem_spawn(GameState *gs, Vector2 pos);
 void gem_update(GameState *gs, float dt);
 void gem_draw(const Gem gems[], float scale, Vector2 offset);

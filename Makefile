@@ -7,7 +7,8 @@ CFLAGS = -std=c99 -Os -flto -Wall -Wextra -ffunction-sections -fdata-sections \
 LDFLAGS = -flto
 
 SRCS = src/main.c src/player.c src/weapon.c src/enemy.c src/gem.c src/render.c \
-       src/input.c src/upgrade.c src/boss.c src/scene.c src/audio.c src/particle.c
+       src/input.c src/upgrade.c src/boss.c src/scene.c src/audio.c src/particle.c \
+       src/bgm.c
 TARGET = disk_survivor
 
 # Size limit (1.44 MB floppy)
