@@ -56,12 +56,17 @@ void player_draw(const Player *p, float scale, Vector2 offset) {
     float x = p->pos.x * scale + offset.x;
     float y = p->pos.y * scale + offset.y;
 
-    Color color = (Color){0, 255, 255, 255};
     if (p->invincible_timer > 0) {
-        int blink = (int)(p->invincible_timer * 10) % 2;
-        color.a = blink ? 100 : 255;
+        int blink = (int)(p->invincible_timer * 15) % 2;
+        if (blink) {
+            float pulse = 1.0f + 0.3f * sinf(p->invincible_timer * 30);
+            DrawCircleV((Vector2){x, y}, r * pulse * 1.3f, (Color){255, 100, 100, 100});
+            DrawCircleV((Vector2){x, y}, r * pulse, (Color){255, 255, 255, 200});
+            DrawCircleV((Vector2){x, y}, r * pulse * 0.5f, (Color){255, 200, 200, 255});
+        }
+        return;
     }
 
-    DrawCircleV((Vector2){x, y}, r, color);
+    DrawCircleV((Vector2){x, y}, r, (Color){0, 255, 255, 255});
     DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){100, 255, 255, 200});
 }
