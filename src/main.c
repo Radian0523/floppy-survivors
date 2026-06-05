@@ -32,6 +32,9 @@ static void game_init(GameState *gs) {
     gs->game_over = false;
     gs->victory = false;
     gs->kills = 0;
+
+    gs->upgrading = false;
+    gs->upgrade_hover = -1;
 }
 
 static void draw_hud(const GameState *gs) {
@@ -74,23 +77,27 @@ int main(void) {
         if (dt > DT_MAX) dt = DT_MAX;
 
         if (!gs.game_over) {
-            gs.game_time += dt;
+            if (gs.upgrading) {
+                upgrade_update(&gs);
+            } else {
+                gs.game_time += dt;
 
-            if (gs.game_time >= GAME_DURATION) {
-                gs.game_over = true;
-                gs.victory = true;
+                if (gs.game_time >= GAME_DURATION) {
+                    gs.game_over = true;
+                    gs.victory = true;
+                }
+
+                if (gs.player.hp <= 0) {
+                    gs.game_over = true;
+                    gs.victory = false;
+                }
+
+                player_update(&gs.player, dt, gs.scale);
+                weapon_update(&gs, dt);
+                bullet_update(&gs, dt);
+                enemy_update(&gs, dt);
+                gem_update(&gs, dt);
             }
-
-            if (gs.player.hp <= 0) {
-                gs.game_over = true;
-                gs.victory = false;
-            }
-
-            player_update(&gs.player, dt, gs.scale);
-            weapon_update(&gs, dt);
-            bullet_update(&gs, dt);
-            enemy_update(&gs, dt);
-            gem_update(&gs, dt);
         } else {
             if (IsKeyPressed(KEY_R)) {
                 game_init(&gs);
@@ -109,6 +116,10 @@ int main(void) {
         EndBlendMode();
 
         draw_hud(&gs);
+
+        if (gs.upgrading) {
+            upgrade_draw(&gs);
+        }
 
         if (gs.game_over) {
             const char *msg = gs.victory ? "DISK RECOVERED!" : "DATA CORRUPTED";

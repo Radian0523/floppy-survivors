@@ -5,6 +5,16 @@
 #include "config.h"
 #include <stdbool.h>
 
+typedef enum {
+    UPGRADE_RAPID_FIRE,
+    UPGRADE_MULTI_SHOT,
+    UPGRADE_POWER,
+    UPGRADE_SPEED,
+    UPGRADE_MAGNET,
+    UPGRADE_VITALITY,
+    UPGRADE_COUNT
+} UpgradeType;
+
 typedef struct {
     Vector2 pos;
     Vector2 vel;
@@ -58,6 +68,10 @@ typedef struct {
 
     int kills;
 
+    bool upgrading;
+    UpgradeType upgrade_choices[UPGRADE_CHOICES];
+    int upgrade_hover;
+
     float scale;
     Vector2 offset;
 } GameState;
@@ -81,6 +95,11 @@ void gem_update(GameState *gs, float dt);
 void gem_draw(const Gem gems[], float scale, Vector2 offset);
 
 void render_background(void);
+
+void upgrade_start(GameState *gs);
+void upgrade_update(GameState *gs);
+void upgrade_draw(const GameState *gs);
+const char* upgrade_get_name(UpgradeType type);
 
 Vector2 input_get_move_direction(void);
 bool input_is_mouse_active(void);

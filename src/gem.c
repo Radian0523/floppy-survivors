@@ -36,6 +36,7 @@ void gem_update(GameState *gs, float dt) {
                 gs->xp -= gs->xp_to_next;
                 gs->level++;
                 gs->xp_to_next += XP_PER_LEVEL;
+                upgrade_start(gs);
             }
         }
     }
