@@ -50,12 +50,31 @@ void gem_update(GameState *gs, float dt) {
 }
 
 void gem_draw(const Gem gems[], float scale, Vector2 offset) {
+    float t = (float)GetTime();
     for (int i = 0; i < MAX_GEMS; i++) {
         if (!gems[i].active) continue;
         float x = gems[i].pos.x * scale + offset.x;
         float y = gems[i].pos.y * scale + offset.y;
         float r = GEM_RADIUS * scale;
-        DrawCircleV((Vector2){x, y}, r, (Color){100, 255, 100, 255});
-        DrawCircleV((Vector2){x, y}, r * 0.5f, (Color){150, 255, 150, 200});
+        float pulse = 1.0f + 0.15f * sinf(t * 4.0f + i * 0.3f);
+        float rr = r * pulse;
+
+        Color outer = {120, 255, 120, 255};
+        Color inner = {220, 255, 220, 255};
+
+        Vector2 top    = {x, y - rr * 1.2f};
+        Vector2 right  = {x + rr * 0.9f, y};
+        Vector2 bottom = {x, y + rr * 1.2f};
+        Vector2 left   = {x - rr * 0.9f, y};
+
+        DrawTriangle(top, left, right, outer);
+        DrawTriangle(bottom, right, left, outer);
+
+        Vector2 itop    = {x, y - rr * 0.5f};
+        Vector2 iright  = {x + rr * 0.4f, y};
+        Vector2 ibottom = {x, y + rr * 0.5f};
+        Vector2 ileft   = {x - rr * 0.4f, y};
+        DrawTriangle(itop, ileft, iright, inner);
+        DrawTriangle(ibottom, iright, ileft, inner);
     }
 }

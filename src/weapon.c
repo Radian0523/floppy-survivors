@@ -5,16 +5,16 @@
 static Color enemy_color_for_type(EnemyType type) {
     switch (type) {
         case ENEMY_BIT:       return (Color){255, 50, 100, 255};
-        case ENEMY_FRAGMENT:  return (Color){100, 255, 150, 255};
-        case ENEMY_PACKET:    return (Color){255, 150, 50, 255};
-        case ENEMY_GLITCH:    return (Color){150, 100, 255, 255};
-        case ENEMY_SPLITTER:  return (Color){255, 255, 100, 255};
-        case ENEMY_BOMBER:    return (Color){255, 80, 200, 255};
-        case ENEMY_RANGER:    return (Color){80, 220, 220, 255};
-        case ENEMY_SWARM:     return (Color){220, 220, 255, 255};
+        case ENEMY_FRAGMENT:  return (Color){255, 180, 60, 255};
+        case ENEMY_PACKET:    return (Color){255, 120, 40, 255};
+        case ENEMY_GLITCH:    return (Color){220, 80, 180, 255};
+        case ENEMY_SPLITTER:  return (Color){255, 80, 60, 255};
+        case ENEMY_BOMBER:    return (Color){255, 60, 140, 255};
+        case ENEMY_RANGER:    return (Color){255, 100, 180, 255};
+        case ENEMY_SWARM:     return (Color){255, 200, 180, 255};
         case ENEMY_BADSECTOR: return (Color){200, 60, 60, 255};
-        case ENEMY_PHASER:    return (Color){180, 100, 220, 255};
-        case ENEMY_TRACKER:   return (Color){255, 120, 80, 255};
+        case ENEMY_PHASER:    return (Color){230, 100, 100, 255};
+        case ENEMY_TRACKER:   return (Color){255, 90, 70, 255};
         default:              return (Color){255, 200, 100, 255};
     }
 }
@@ -168,8 +168,21 @@ void bullet_draw(const Bullet bullets[], float scale, Vector2 offset) {
         float x = bullets[i].pos.x * scale + offset.x;
         float y = bullets[i].pos.y * scale + offset.y;
         float r = BULLET_RADIUS * scale;
-        DrawCircleV((Vector2){x, y}, r, (Color){255, 255, 100, 255});
-        DrawCircleV((Vector2){x, y}, r * 0.5f, (Color){255, 255, 200, 200});
+
+        float vx = bullets[i].vel.x;
+        float vy = bullets[i].vel.y;
+        float vlen = sqrtf(vx * vx + vy * vy);
+        if (vlen < 0.001f) vlen = 1;
+        float dx = vx / vlen;
+        float dy = vy / vlen;
+
+        float trail_len = r * 4.0f;
+        Vector2 tail = {x - dx * trail_len, y - dy * trail_len};
+        Vector2 head = {x + dx * r * 0.5f, y + dy * r * 0.5f};
+
+        DrawLineEx(tail, head, r * 1.6f, (Color){255, 255, 100, 180});
+        DrawLineEx(tail, head, r * 0.8f, (Color){255, 255, 220, 255});
+        DrawCircleV((Vector2){x, y}, r * 0.5f, (Color){255, 255, 255, 255});
     }
 }
 
@@ -330,8 +343,8 @@ void beam_draw(const GameState *gs, float scale, Vector2 offset) {
 
     float w = gs->beam_width * scale;
 
-    DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w, (Color){255, 50, 50, 200});
-    DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w * 0.5f, (Color){255, 150, 150, 255});
+    DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w, (Color){180, 80, 255, 200});
+    DrawLineEx((Vector2){px, py}, (Vector2){ex, ey}, w * 0.5f, (Color){220, 180, 255, 255});
 }
 
 // === NOVA ===
@@ -406,8 +419,8 @@ void nova_draw(const GameState *gs, float scale, Vector2 offset) {
     float r = gs->nova.current_radius * scale;
 
     float alpha = 1.0f - (gs->nova.current_radius / gs->nova_max_radius);
-    Color col = {255, 100, 255, (unsigned char)(200 * alpha)};
-    Color col_inner = {255, 150, 255, (unsigned char)(255 * alpha)};
+    Color col = {100, 255, 255, (unsigned char)(200 * alpha)};
+    Color col_inner = {180, 255, 255, (unsigned char)(255 * alpha)};
 
     DrawRing((Vector2){px, py}, r - 5 * scale, r + 5 * scale, 0, 360, 36, col);
     DrawRing((Vector2){px, py}, r - 2 * scale, r + 2 * scale, 0, 360, 36, col_inner);

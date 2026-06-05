@@ -68,10 +68,10 @@ static const char *weapon_descs[STARTING_WEAPON_COUNT] = {
 };
 
 static Color weapon_colors[STARTING_WEAPON_COUNT] = {
-    {255, 255, 100, 255},
-    {100, 150, 255, 255},
-    {255, 80, 80, 255},
-    {255, 100, 255, 255}
+    {255, 255, 100, 255},   // Pulse: yellow
+    {100, 150, 255, 255},   // Orbiters: blue
+    {180, 80, 255, 255},    // Beam: violet
+    {100, 255, 255, 255}    // Nova: cyan
 };
 
 static void draw_weapon_preview(int idx, float cx, float cy, float t) {

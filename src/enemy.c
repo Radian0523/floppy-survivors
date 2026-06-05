@@ -322,18 +322,18 @@ void enemy_update(GameState *gs, float dt) {
 
 static Color get_enemy_color(EnemyType type) {
     switch (type) {
-        case ENEMY_BIT:            return (Color){255, 50, 100, 255};
-        case ENEMY_FRAGMENT:       return (Color){100, 255, 150, 255};
-        case ENEMY_PACKET:         return (Color){255, 150, 50, 255};
-        case ENEMY_GLITCH:         return (Color){150, 100, 255, 255};
-        case ENEMY_SPLITTER:       return (Color){255, 255, 100, 255};
-        case ENEMY_SPLITTER_CHILD: return (Color){255, 200, 100, 255};
-        case ENEMY_BOMBER:         return (Color){255, 80, 200, 255};
-        case ENEMY_RANGER:         return (Color){80, 220, 220, 255};
-        case ENEMY_SWARM:          return (Color){220, 220, 255, 255};
-        case ENEMY_BADSECTOR:      return (Color){200, 60, 60, 255};
-        case ENEMY_PHASER:         return (Color){180, 100, 220, 255};
-        case ENEMY_TRACKER:        return (Color){255, 120, 80, 255};
+        case ENEMY_BIT:            return (Color){255, 50, 100, 255};   // red-pink
+        case ENEMY_FRAGMENT:       return (Color){255, 180, 60, 255};   // bright orange
+        case ENEMY_PACKET:         return (Color){255, 120, 40, 255};   // deep orange
+        case ENEMY_GLITCH:         return (Color){220, 80, 180, 255};   // magenta-pink
+        case ENEMY_SPLITTER:       return (Color){255, 80, 60, 255};    // scarlet
+        case ENEMY_SPLITTER_CHILD: return (Color){255, 140, 80, 255};   // light scarlet
+        case ENEMY_BOMBER:         return (Color){255, 60, 140, 255};   // pink
+        case ENEMY_RANGER:         return (Color){255, 100, 180, 255};  // pink magenta
+        case ENEMY_SWARM:          return (Color){255, 200, 180, 255};  // peach
+        case ENEMY_BADSECTOR:      return (Color){200, 60, 60, 255};    // deep red
+        case ENEMY_PHASER:         return (Color){230, 100, 100, 255};  // muted red
+        case ENEMY_TRACKER:        return (Color){255, 90, 70, 255};    // orange-red
         default:                   return (Color){255, 50, 100, 255};
     }
 }
