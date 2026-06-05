@@ -120,7 +120,7 @@
 #define SHAKE_KILL 2.0f
 #define SHAKE_BOSS_HIT 6.0f
 #define SHAKE_DECAY 8.0f
-#define BOSS_SPAWN_TIME 240.0f
+#define BOSS_SPAWN_TIME 10.0f
 
 // Boss FORMAT
 #define BOSS_HP 150

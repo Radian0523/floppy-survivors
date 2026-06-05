@@ -1,6 +1,7 @@
 #include "game.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void boss_spawn(GameState *gs) {
     Boss *b = &gs->boss;
@@ -116,6 +117,59 @@ void boss_take_damage(GameState *gs, int damage) {
     }
 }
 
+static void draw_boss_indicator(const GameState *gs, float scale, Vector2 offset) {
+    const Boss *b = &gs->boss;
+
+    float margin = BOSS_RADIUS * 0.5f;
+    bool off_left = b->pos.x < margin;
+    bool off_right = b->pos.x > LOGICAL_W - margin;
+    bool off_top = b->pos.y < margin;
+    bool off_bottom = b->pos.y > LOGICAL_H - margin;
+
+    if (!off_left && !off_right && !off_top && !off_bottom) return;
+
+    float bx = b->pos.x;
+    float by = b->pos.y;
+    float edge_margin = 30.0f;
+    if (bx < edge_margin) bx = edge_margin;
+    if (bx > LOGICAL_W - edge_margin) bx = LOGICAL_W - edge_margin;
+    if (by < edge_margin) by = edge_margin;
+    if (by > LOGICAL_H - edge_margin) by = LOGICAL_H - edge_margin;
+
+    float dx = b->pos.x - bx;
+    float dy = b->pos.y - by;
+    float len = sqrtf(dx * dx + dy * dy);
+    float angle = (len > 0) ? atan2f(dy, dx) : 0;
+
+    float sx = bx * scale + offset.x;
+    float sy = by * scale + offset.y;
+    float arrow_size = 18.0f * scale;
+
+    float pulse = 0.7f + 0.3f * sinf((float)GetTime() * 6.0f);
+    Color col = {255, 200, 50, (unsigned char)(255 * pulse)};
+    Color glow = {255, 100, 50, (unsigned char)(120 * pulse)};
+
+    Vector2 tip = {sx + cosf(angle) * arrow_size, sy + sinf(angle) * arrow_size};
+    Vector2 base_l = {
+        sx + cosf(angle + 2.4f) * arrow_size * 0.7f,
+        sy + sinf(angle + 2.4f) * arrow_size * 0.7f
+    };
+    Vector2 base_r = {
+        sx + cosf(angle - 2.4f) * arrow_size * 0.7f,
+        sy + sinf(angle - 2.4f) * arrow_size * 0.7f
+    };
+
+    DrawCircleV((Vector2){sx, sy}, arrow_size * 1.2f, glow);
+    DrawTriangle(tip, base_l, base_r, col);
+    DrawTriangle(tip, base_r, base_l, col);
+
+    char hp_buf[16];
+    sprintf(hp_buf, "%d", b->hp);
+    int tw = MeasureText(hp_buf, 12);
+    DrawText(hp_buf, (int)(sx - tw / 2), (int)(sy + arrow_size + 2), 12,
+        (Color){255, 200, 100, 255});
+}
+
 void boss_draw(const GameState *gs, float scale, Vector2 offset) {
     const Boss *b = &gs->boss;
     if (!b->active) return;
@@ -145,4 +199,6 @@ void boss_draw(const GameState *gs, float scale, Vector2 offset) {
     const char *name = "FORMAT";
     int tw = MeasureText(name, 14);
     DrawText(name, (int)(x - tw / 2), bar_y - 18, 14, (Color){255, 200, 100, 255});
+
+    draw_boss_indicator(gs, scale, offset);
 }
