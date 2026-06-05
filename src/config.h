@@ -109,6 +109,17 @@
 // Game
 #define GAME_DURATION 300.0f
 #define DT_MAX 0.04f
+
+// Particles
+#define MAX_PARTICLES 512
+#define PARTICLE_LIFE 0.5f
+#define PARTICLE_SPEED 180.0f
+
+// Screen shake
+#define SHAKE_HIT 4.0f
+#define SHAKE_KILL 2.0f
+#define SHAKE_BOSS_HIT 6.0f
+#define SHAKE_DECAY 8.0f
 #define BOSS_SPAWN_TIME 240.0f
 
 // Boss FORMAT

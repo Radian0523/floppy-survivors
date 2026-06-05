@@ -2,10 +2,24 @@
 #include <math.h>
 #include <float.h>
 
+static Color enemy_color_for_type(EnemyType type) {
+    switch (type) {
+        case ENEMY_BIT:      return (Color){255, 50, 100, 255};
+        case ENEMY_FRAGMENT: return (Color){100, 255, 150, 255};
+        case ENEMY_PACKET:   return (Color){255, 150, 50, 255};
+        case ENEMY_GLITCH:   return (Color){150, 100, 255, 255};
+        case ENEMY_SPLITTER: return (Color){255, 255, 100, 255};
+        default:             return (Color){255, 200, 100, 255};
+    }
+}
+
 static void kill_enemy(GameState *gs, int idx) {
     Enemy *e = &gs->enemies[idx];
     Vector2 pos = e->pos;
     EnemyType type = e->type;
+
+    particles_spawn_burst(gs, pos, enemy_color_for_type(type), 10);
+    shake_add(gs, SHAKE_KILL);
 
     gem_spawn(gs, pos);
     e->active = false;

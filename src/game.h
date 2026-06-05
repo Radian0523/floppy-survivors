@@ -100,6 +100,15 @@ typedef struct {
 typedef struct {
     Vector2 pos;
     Vector2 vel;
+    float life;
+    float max_life;
+    Color color;
+    bool active;
+} Particle;
+
+typedef struct {
+    Vector2 pos;
+    Vector2 vel;
     int hp;
     int max_hp;
     bool active;
@@ -160,6 +169,9 @@ typedef struct {
     Boss boss;
     bool boss_defeated;
 
+    Particle particles[MAX_PARTICLES];
+    float shake_amount;
+
     GameScene scene;
     float scene_timer;
 
@@ -174,7 +186,7 @@ typedef struct {
 // Module functions
 void player_init(Player *p, float scale);
 void player_update(Player *p, float dt, float scale);
-void player_take_damage(Player *p, int damage);
+void player_take_damage(GameState *gs, int damage);
 void player_draw(const Player *p, float scale, Vector2 offset);
 
 void weapon_update(GameState *gs, float dt);
@@ -202,6 +214,12 @@ void boss_spawn(GameState *gs);
 void boss_update(GameState *gs, float dt);
 void boss_draw(const GameState *gs, float scale, Vector2 offset);
 void boss_take_damage(GameState *gs, int damage);
+
+void particles_init(GameState *gs);
+void particles_spawn_burst(GameState *gs, Vector2 pos, Color color, int count);
+void particles_update(GameState *gs, float dt);
+void particles_draw(const GameState *gs, float scale, Vector2 offset);
+void shake_add(GameState *gs, float amount);
 
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);

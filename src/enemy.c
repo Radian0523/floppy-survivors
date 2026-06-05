@@ -175,7 +175,7 @@ void enemy_update(GameState *gs, float dt) {
 
         float dist = sqrtf(dx * dx + dy * dy);
         if (dist < PLAYER_RADIUS + e->radius) {
-            player_take_damage(&gs->player, ENEMY_DAMAGE);
+            player_take_damage(gs, ENEMY_DAMAGE);
         }
     }
 }

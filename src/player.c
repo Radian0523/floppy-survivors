@@ -44,12 +44,15 @@ void player_update(Player *p, float dt, float scale) {
     if (p->pos.y > LOGICAL_H - margin) p->pos.y = LOGICAL_H - margin;
 }
 
-void player_take_damage(Player *p, int damage) {
+void player_take_damage(GameState *gs, int damage) {
+    Player *p = &gs->player;
     if (p->invincible_timer > 0) return;
     p->hp -= damage;
     if (p->hp < 0) p->hp = 0;
     p->invincible_timer = PLAYER_INVINCIBLE_TIME;
     audio_play(SFX_PLAYER_HIT);
+    particles_spawn_burst(gs, p->pos, (Color){255, 255, 255, 255}, 16);
+    shake_add(gs, SHAKE_HIT);
 }
 
 void player_draw(const Player *p, float scale, Vector2 offset) {

@@ -62,6 +62,8 @@ static void game_init(GameState *gs) {
     gs->boss.active = false;
     gs->boss_defeated = false;
 
+    particles_init(gs);
+
     gs->upgrading = false;
     gs->upgrade_hover = -1;
 }
@@ -137,20 +139,30 @@ static void update_game(GameState *gs, float dt) {
     enemy_update(gs, dt);
     boss_update(gs, dt);
     gem_update(gs, dt);
+    particles_update(gs, dt);
 }
 
 static void draw_game_world(const GameState *gs) {
+    Vector2 shake_offset = gs->offset;
+    if (gs->shake_amount > 0) {
+        float sx = ((rand() % 200) / 100.0f - 1.0f) * gs->shake_amount;
+        float sy = ((rand() % 200) / 100.0f - 1.0f) * gs->shake_amount;
+        shake_offset.x += sx;
+        shake_offset.y += sy;
+    }
+
     render_background();
     BeginBlendMode(BLEND_ADDITIVE);
 
-    bullet_draw(gs->bullets, gs->scale, gs->offset);
-    orbiters_draw(gs, gs->scale, gs->offset);
-    beam_draw(gs, gs->scale, gs->offset);
-    nova_draw(gs, gs->scale, gs->offset);
-    enemy_draw(gs->enemies, gs->scale, gs->offset);
-    boss_draw(gs, gs->scale, gs->offset);
-    gem_draw(gs->gems, gs->scale, gs->offset);
-    player_draw(&gs->player, gs->scale, gs->offset);
+    bullet_draw(gs->bullets, gs->scale, shake_offset);
+    orbiters_draw(gs, gs->scale, shake_offset);
+    beam_draw(gs, gs->scale, shake_offset);
+    nova_draw(gs, gs->scale, shake_offset);
+    enemy_draw(gs->enemies, gs->scale, shake_offset);
+    boss_draw(gs, gs->scale, shake_offset);
+    gem_draw(gs->gems, gs->scale, shake_offset);
+    particles_draw(gs, gs->scale, shake_offset);
+    player_draw(&gs->player, gs->scale, shake_offset);
 
     EndBlendMode();
 }

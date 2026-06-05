@@ -85,7 +85,7 @@ void boss_update(GameState *gs, float dt) {
     }
 
     if (dist < PLAYER_RADIUS + BOSS_RADIUS) {
-        player_take_damage(&gs->player, BOSS_DAMAGE);
+        player_take_damage(gs, BOSS_DAMAGE);
     }
 }
 
@@ -95,10 +95,15 @@ void boss_take_damage(GameState *gs, int damage) {
 
     b->hp -= damage;
     audio_play(SFX_BOSS_HIT);
+    shake_add(gs, 1.0f);
+
     if (b->hp <= 0) {
         b->active = false;
         gs->boss_defeated = true;
         gs->kills += 10;
+
+        particles_spawn_burst(gs, b->pos, (Color){255, 200, 50, 255}, 60);
+        shake_add(gs, SHAKE_BOSS_HIT * 2);
 
         for (int i = 0; i < 20; i++) {
             float angle = (2.0f * 3.14159f * i) / 20.0f;
