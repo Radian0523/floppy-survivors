@@ -59,6 +59,9 @@ static void game_init(GameState *gs) {
     gs->victory = false;
     gs->kills = 0;
 
+    gs->boss.active = false;
+    gs->boss_defeated = false;
+
     gs->upgrading = false;
     gs->upgrade_hover = -1;
 }
@@ -115,6 +118,15 @@ int main(void) {
             } else {
                 gs.game_time += dt;
 
+                if (!gs.boss.active && !gs.boss_defeated && gs.game_time >= BOSS_SPAWN_TIME) {
+                    boss_spawn(&gs);
+                }
+
+                if (gs.boss_defeated) {
+                    gs.game_over = true;
+                    gs.victory = true;
+                }
+
                 if (gs.game_time >= GAME_DURATION) {
                     gs.game_over = true;
                     gs.victory = true;
@@ -132,6 +144,7 @@ int main(void) {
                 beam_update(&gs, dt);
                 nova_update(&gs, dt);
                 enemy_update(&gs, dt);
+                boss_update(&gs, dt);
                 gem_update(&gs, dt);
             }
         } else {
@@ -149,6 +162,7 @@ int main(void) {
         beam_draw(&gs, gs.scale, gs.offset);
         nova_draw(&gs, gs.scale, gs.offset);
         enemy_draw(gs.enemies, gs.scale, gs.offset);
+        boss_draw(&gs, gs.scale, gs.offset);
         gem_draw(gs.gems, gs.scale, gs.offset);
         player_draw(&gs.player, gs.scale, gs.offset);
 

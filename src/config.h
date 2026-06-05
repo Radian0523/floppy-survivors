@@ -109,5 +109,16 @@
 // Game
 #define GAME_DURATION 300.0f
 #define DT_MAX 0.04f
+#define BOSS_SPAWN_TIME 240.0f
+
+// Boss FORMAT
+#define BOSS_HP 150
+#define BOSS_SPEED 35.0f
+#define BOSS_RADIUS 40.0f
+#define BOSS_DAMAGE 2
+#define BOSS_CHARGE_SPEED 200.0f
+#define BOSS_CHARGE_DURATION 0.8f
+#define BOSS_CHARGE_COOLDOWN 4.0f
+#define BOSS_SPAWN_INTERVAL 3.0f
 
 #endif

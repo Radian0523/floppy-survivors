@@ -23,9 +23,10 @@ static void kill_enemy(GameState *gs, int idx) {
     }
 }
 
-static int find_nearest_enemy(const GameState *gs) {
+static int find_nearest_enemy(const GameState *gs, Vector2 *out_pos) {
     int nearest = -1;
     float min_dist = FLT_MAX;
+
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!gs->enemies[i].active) continue;
         float dx = gs->enemies[i].pos.x - gs->player.pos.x;
@@ -34,8 +35,20 @@ static int find_nearest_enemy(const GameState *gs) {
         if (dist < min_dist) {
             min_dist = dist;
             nearest = i;
+            if (out_pos) *out_pos = gs->enemies[i].pos;
         }
     }
+
+    if (gs->boss.active) {
+        float dx = gs->boss.pos.x - gs->player.pos.x;
+        float dy = gs->boss.pos.y - gs->player.pos.y;
+        float dist = dx * dx + dy * dy;
+        if (dist < min_dist) {
+            nearest = -2;
+            if (out_pos) *out_pos = gs->boss.pos;
+        }
+    }
+
     return nearest;
 }
 
@@ -56,10 +69,11 @@ void weapon_update(GameState *gs, float dt) {
     if (gs->fire_timer <= 0) {
         gs->fire_timer = gs->fire_interval;
 
-        int target = find_nearest_enemy(gs);
-        if (target >= 0) {
-            float dx = gs->enemies[target].pos.x - gs->player.pos.x;
-            float dy = gs->enemies[target].pos.y - gs->player.pos.y;
+        Vector2 target_pos;
+        int target = find_nearest_enemy(gs, &target_pos);
+        if (target != -1) {
+            float dx = target_pos.x - gs->player.pos.x;
+            float dy = target_pos.y - gs->player.pos.y;
             float len = sqrtf(dx * dx + dy * dy);
             if (len > 0) {
                 Vector2 dir = {dx / len, dy / len};
@@ -83,6 +97,17 @@ void bullet_update(GameState *gs, float dt) {
             b->pos.y < -50 || b->pos.y > LOGICAL_H + 50) {
             b->active = false;
             continue;
+        }
+
+        if (gs->boss.active) {
+            float dx = b->pos.x - gs->boss.pos.x;
+            float dy = b->pos.y - gs->boss.pos.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            if (dist < BULLET_RADIUS + BOSS_RADIUS) {
+                boss_take_damage(gs, gs->bullet_damage);
+                b->active = false;
+                continue;
+            }
         }
 
         for (int j = 0; j < MAX_ENEMIES; j++) {
@@ -150,6 +175,15 @@ void orbiters_update(GameState *gs, float dt) {
                 if (gs->enemies[j].hp <= 0) {
                     kill_enemy(gs, j);
                 }
+            }
+        }
+
+        if (gs->boss.active) {
+            float dx = ox - gs->boss.pos.x;
+            float dy = oy - gs->boss.pos.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            if (dist < ORBITER_RADIUS + BOSS_RADIUS) {
+                boss_take_damage(gs, gs->orbiter_damage);
             }
         }
     }
@@ -220,6 +254,18 @@ void beam_update(GameState *gs, float dt) {
                 }
             }
         }
+
+        if (gs->boss.active) {
+            float dx = gs->boss.pos.x - gs->player.pos.x;
+            float dy = gs->boss.pos.y - gs->player.pos.y;
+            float proj = dx * cos_a + dy * sin_a;
+            if (proj >= 0 && proj <= gs->beam_length) {
+                float perp = fabsf(-dx * sin_a + dy * cos_a);
+                if (perp < gs->beam_width / 2 + BOSS_RADIUS) {
+                    boss_take_damage(gs, gs->beam_damage);
+                }
+            }
+        }
     } else {
         gs->beam.timer -= dt;
         if (gs->beam.timer <= 0) {
@@ -279,6 +325,17 @@ void nova_update(GameState *gs, float dt) {
                 if (gs->enemies[i].hp <= 0) {
                     kill_enemy(gs, i);
                 }
+            }
+        }
+
+        if (gs->boss.active) {
+            float dx = gs->boss.pos.x - gs->player.pos.x;
+            float dy = gs->boss.pos.y - gs->player.pos.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            float ring_inner = gs->nova.current_radius - 15.0f;
+            float ring_outer = gs->nova.current_radius + 15.0f;
+            if (dist > ring_inner - BOSS_RADIUS && dist < ring_outer + BOSS_RADIUS) {
+                boss_take_damage(gs, gs->nova_damage);
             }
         }
 

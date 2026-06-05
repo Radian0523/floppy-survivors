@@ -92,6 +92,19 @@ typedef struct {
 } Gem;
 
 typedef struct {
+    Vector2 pos;
+    Vector2 vel;
+    int hp;
+    int max_hp;
+    bool active;
+    bool charging;
+    float charge_timer;
+    float charge_cooldown;
+    float spawn_timer;
+    Vector2 charge_dir;
+} Boss;
+
+typedef struct {
     Player player;
     Bullet bullets[MAX_BULLETS];
     Enemy enemies[MAX_ENEMIES];
@@ -138,6 +151,9 @@ typedef struct {
 
     int kills;
 
+    Boss boss;
+    bool boss_defeated;
+
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
     int upgrade_hover;
@@ -172,6 +188,11 @@ void enemy_spawn(GameState *gs);
 void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos);
 void enemy_update(GameState *gs, float dt);
 void enemy_draw(const Enemy enemies[], float scale, Vector2 offset);
+
+void boss_spawn(GameState *gs);
+void boss_update(GameState *gs, float dt);
+void boss_draw(const GameState *gs, float scale, Vector2 offset);
+void boss_take_damage(GameState *gs, int damage);
 
 void gem_spawn(GameState *gs, Vector2 pos);
 void gem_update(GameState *gs, float dt);
