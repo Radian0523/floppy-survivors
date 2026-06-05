@@ -36,6 +36,7 @@ static void game_init(GameState *gs) {
     for (int i = 0; i < MAX_BULLETS; i++) gs->bullets[i].active = false;
     for (int i = 0; i < MAX_ENEMIES; i++) gs->enemies[i].active = false;
     for (int i = 0; i < MAX_GEMS; i++) gs->gems[i].active = false;
+    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) gs->enemy_bullets[i].active = false;
 
     gs->xp = 0;
     gs->level = 1;
@@ -177,6 +178,7 @@ static void update_game(GameState *gs, float dt) {
     beam_update(gs, dt);
     nova_update(gs, dt);
     enemy_update(gs, dt);
+    enemy_bullets_update(gs, dt);
     boss_update(gs, dt);
     gem_update(gs, dt);
     particles_update(gs, dt);
@@ -199,6 +201,7 @@ static void draw_game_world(const GameState *gs) {
     beam_draw(gs, gs->scale, shake_offset);
     nova_draw(gs, gs->scale, shake_offset);
     enemy_draw(gs->enemies, gs->scale, shake_offset);
+    enemy_bullets_draw(gs, gs->scale, shake_offset);
     boss_draw(gs, gs->scale, shake_offset);
     gem_draw(gs->gems, gs->scale, shake_offset);
     particles_draw(gs, gs->scale, shake_offset);

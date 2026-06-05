@@ -4,12 +4,18 @@
 
 static Color enemy_color_for_type(EnemyType type) {
     switch (type) {
-        case ENEMY_BIT:      return (Color){255, 50, 100, 255};
-        case ENEMY_FRAGMENT: return (Color){100, 255, 150, 255};
-        case ENEMY_PACKET:   return (Color){255, 150, 50, 255};
-        case ENEMY_GLITCH:   return (Color){150, 100, 255, 255};
-        case ENEMY_SPLITTER: return (Color){255, 255, 100, 255};
-        default:             return (Color){255, 200, 100, 255};
+        case ENEMY_BIT:       return (Color){255, 50, 100, 255};
+        case ENEMY_FRAGMENT:  return (Color){100, 255, 150, 255};
+        case ENEMY_PACKET:    return (Color){255, 150, 50, 255};
+        case ENEMY_GLITCH:    return (Color){150, 100, 255, 255};
+        case ENEMY_SPLITTER:  return (Color){255, 255, 100, 255};
+        case ENEMY_BOMBER:    return (Color){255, 80, 200, 255};
+        case ENEMY_RANGER:    return (Color){80, 220, 220, 255};
+        case ENEMY_SWARM:     return (Color){220, 220, 255, 255};
+        case ENEMY_BADSECTOR: return (Color){200, 60, 60, 255};
+        case ENEMY_PHASER:    return (Color){180, 100, 220, 255};
+        case ENEMY_TRACKER:   return (Color){255, 120, 80, 255};
+        default:              return (Color){255, 200, 100, 255};
     }
 }
 
@@ -34,6 +40,14 @@ static void kill_enemy(GameState *gs, int idx) {
                 pos.y + sinf(angle) * 15.0f
             };
             enemy_spawn_at(gs, ENEMY_SPLITTER_CHILD, child_pos);
+        }
+    } else if (type == ENEMY_BOMBER) {
+        particles_spawn_burst(gs, pos, (Color){255, 100, 200, 255}, 24);
+        shake_add(gs, SHAKE_HIT);
+        float dx = gs->player.pos.x - pos.x;
+        float dy = gs->player.pos.y - pos.y;
+        if (sqrtf(dx * dx + dy * dy) < BOMBER_EXPLOSION_RADIUS + PLAYER_RADIUS) {
+            player_take_damage(gs, BOMBER_EXPLOSION_DAMAGE);
         }
     }
 }
@@ -130,6 +144,7 @@ void bullet_update(GameState *gs, float dt) {
 
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (!gs->enemies[j].active) continue;
+            if (gs->enemies[j].phased) continue;
             float dx = b->pos.x - gs->enemies[j].pos.x;
             float dy = b->pos.y - gs->enemies[j].pos.y;
             float dist = sqrtf(dx * dx + dy * dy);
@@ -187,6 +202,7 @@ void orbiters_update(GameState *gs, float dt) {
 
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (!gs->enemies[j].active) continue;
+            if (gs->enemies[j].phased) continue;
             float dx = ox - gs->enemies[j].pos.x;
             float dy = oy - gs->enemies[j].pos.y;
             float dist = sqrtf(dx * dx + dy * dy);
@@ -261,6 +277,7 @@ void beam_update(GameState *gs, float dt) {
 
         for (int i = 0; i < MAX_ENEMIES; i++) {
             if (!gs->enemies[i].active) continue;
+            if (gs->enemies[i].phased) continue;
 
             float dx = gs->enemies[i].pos.x - gs->player.pos.x;
             float dy = gs->enemies[i].pos.y - gs->player.pos.y;
@@ -337,6 +354,7 @@ void nova_update(GameState *gs, float dt) {
 
         for (int i = 0; i < MAX_ENEMIES; i++) {
             if (!gs->enemies[i].active) continue;
+            if (gs->enemies[i].phased) continue;
 
             float dx = gs->enemies[i].pos.x - gs->player.pos.x;
             float dy = gs->enemies[i].pos.y - gs->player.pos.y;

@@ -87,6 +87,12 @@ typedef enum {
     ENEMY_GLITCH,
     ENEMY_SPLITTER,
     ENEMY_SPLITTER_CHILD,
+    ENEMY_BOMBER,
+    ENEMY_RANGER,
+    ENEMY_SWARM,
+    ENEMY_BADSECTOR,
+    ENEMY_PHASER,
+    ENEMY_TRACKER,
     ENEMY_TYPE_COUNT
 } EnemyType;
 
@@ -97,9 +103,17 @@ typedef struct {
     float speed;
     float radius;
     EnemyType type;
-    float glitch_timer;
+    float type_timer;
+    float phase_timer;
+    bool phased;
     bool active;
 } Enemy;
+
+typedef struct {
+    Vector2 pos;
+    Vector2 vel;
+    bool active;
+} EnemyBullet;
 
 typedef struct {
     Vector2 pos;
@@ -190,6 +204,7 @@ typedef struct {
 
     Particle particles[MAX_PARTICLES];
     Popup popups[MAX_POPUPS];
+    EnemyBullet enemy_bullets[MAX_ENEMY_BULLETS];
     float shake_amount;
     float flash_amount;
     Color flash_color;
@@ -233,6 +248,9 @@ void enemy_spawn(GameState *gs);
 void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos);
 void enemy_update(GameState *gs, float dt);
 void enemy_draw(const Enemy enemies[], float scale, Vector2 offset);
+void enemy_bullet_spawn(GameState *gs, Vector2 pos, Vector2 dir);
+void enemy_bullets_update(GameState *gs, float dt);
+void enemy_bullets_draw(const GameState *gs, float scale, Vector2 offset);
 
 void boss_spawn(GameState *gs);
 void boss_update(GameState *gs, float dt);
