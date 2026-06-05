@@ -29,9 +29,11 @@ void gem_update(GameState *gs, float dt) {
         }
 
         if (dist < PLAYER_RADIUS + GEM_RADIUS) {
+            Vector2 pickup_pos = g->pos;
             g->active = false;
             gs->xp += GEM_XP_VALUE;
             audio_play(SFX_GEM_PICKUP);
+            particles_spawn_burst(gs, pickup_pos, (Color){150, 255, 150, 255}, 4);
 
             if (gs->xp >= gs->xp_to_next) {
                 gs->xp -= gs->xp_to_next;
@@ -39,6 +41,9 @@ void gem_update(GameState *gs, float dt) {
                 gs->xp_to_next += XP_PER_LEVEL;
                 upgrade_start(gs);
                 audio_play(SFX_LEVEL_UP);
+                flash_trigger(gs, (Color){255, 255, 200, 255}, 0.6f);
+                particles_spawn_burst(gs, gs->player.pos,
+                    (Color){255, 255, 150, 255}, 30);
             }
         }
     }

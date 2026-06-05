@@ -1,12 +1,17 @@
 #include "game.h"
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void particles_init(GameState *gs) {
     for (int i = 0; i < MAX_PARTICLES; i++) {
         gs->particles[i].active = false;
     }
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        gs->popups[i].active = false;
+    }
     gs->shake_amount = 0;
+    gs->flash_amount = 0;
 }
 
 void particles_spawn_burst(GameState *gs, Vector2 pos, Color color, int count) {
@@ -51,6 +56,13 @@ void particles_update(GameState *gs, float dt) {
         gs->shake_amount -= SHAKE_DECAY * dt;
         if (gs->shake_amount < 0) gs->shake_amount = 0;
     }
+
+    if (gs->flash_amount > 0) {
+        gs->flash_amount -= FLASH_DECAY * dt;
+        if (gs->flash_amount < 0) gs->flash_amount = 0;
+    }
+
+    popups_update(gs, dt);
 }
 
 void particles_draw(const GameState *gs, float scale, Vector2 offset) {
@@ -74,4 +86,63 @@ void shake_add(GameState *gs, float amount) {
     if (amount > gs->shake_amount) {
         gs->shake_amount = amount;
     }
+}
+
+void popup_spawn(GameState *gs, Vector2 pos, int value, Color color) {
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        if (!gs->popups[i].active) {
+            gs->popups[i].active = true;
+            gs->popups[i].pos = pos;
+            gs->popups[i].pos.x += ((rand() % 20) - 10);
+            gs->popups[i].pos.y += ((rand() % 10) - 5);
+            gs->popups[i].life = POPUP_LIFE;
+            gs->popups[i].max_life = POPUP_LIFE;
+            gs->popups[i].value = value;
+            gs->popups[i].color = color;
+            return;
+        }
+    }
+}
+
+void popups_update(GameState *gs, float dt) {
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        if (!gs->popups[i].active) continue;
+        Popup *p = &gs->popups[i];
+        p->pos.y -= POPUP_RISE_SPEED * dt;
+        p->life -= dt;
+        if (p->life <= 0) p->active = false;
+    }
+}
+
+void popups_draw(const GameState *gs, float scale, Vector2 offset) {
+    char buf[16];
+    for (int i = 0; i < MAX_POPUPS; i++) {
+        if (!gs->popups[i].active) continue;
+        const Popup *p = &gs->popups[i];
+        float ratio = p->life / p->max_life;
+        float x = p->pos.x * scale + offset.x;
+        float y = p->pos.y * scale + offset.y;
+        sprintf(buf, "%d", p->value);
+        int size = 14;
+        int tw = MeasureText(buf, size);
+        Color c = p->color;
+        c.a = (unsigned char)(255 * ratio);
+        Color shadow = {0, 0, 0, (unsigned char)(180 * ratio)};
+        DrawText(buf, (int)(x - tw / 2 + 1), (int)(y + 1), size, shadow);
+        DrawText(buf, (int)(x - tw / 2), (int)y, size, c);
+    }
+}
+
+void flash_trigger(GameState *gs, Color color, float amount) {
+    if (amount > gs->flash_amount) {
+        gs->flash_amount = amount;
+        gs->flash_color = color;
+    }
+}
+
+void flash_draw(const GameState *gs) {
+    if (gs->flash_amount <= 0) return;
+    Color c = gs->flash_color;
+    c.a = (unsigned char)(255 * gs->flash_amount);
+    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), c);
 }

@@ -187,6 +187,8 @@ static void draw_game_world(const GameState *gs) {
     player_draw(&gs->player, gs->scale, shake_offset);
 
     EndBlendMode();
+
+    popups_draw(gs, gs->scale, shake_offset);
 }
 
 int main(void) {
@@ -252,6 +254,7 @@ int main(void) {
                 scene_weapon_select_draw(&gs);
                 break;
             case SCENE_GAME:
+                flash_draw(&gs);
                 draw_hud(&gs);
                 if (gs.upgrading) upgrade_draw(&gs);
                 break;

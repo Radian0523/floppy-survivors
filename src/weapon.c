@@ -135,6 +135,8 @@ void bullet_update(GameState *gs, float dt) {
             float dist = sqrtf(dx * dx + dy * dy);
             if (dist < BULLET_RADIUS + gs->enemies[j].radius) {
                 gs->enemies[j].hp -= gs->bullet_damage;
+                popup_spawn(gs, gs->enemies[j].pos, gs->bullet_damage,
+                    (Color){255, 255, 200, 255});
                 b->active = false;
                 if (gs->enemies[j].hp <= 0) {
                     kill_enemy(gs, j);
@@ -190,6 +192,8 @@ void orbiters_update(GameState *gs, float dt) {
             float dist = sqrtf(dx * dx + dy * dy);
             if (dist < ORBITER_RADIUS + gs->enemies[j].radius) {
                 gs->enemies[j].hp -= gs->orbiter_damage;
+                popup_spawn(gs, gs->enemies[j].pos, gs->orbiter_damage,
+                    (Color){200, 220, 255, 255});
                 if (gs->enemies[j].hp <= 0) {
                     kill_enemy(gs, j);
                 }
@@ -267,6 +271,8 @@ void beam_update(GameState *gs, float dt) {
             float perp = fabsf(-dx * sin_a + dy * cos_a);
             if (perp < gs->beam_width / 2 + gs->enemies[i].radius) {
                 gs->enemies[i].hp -= gs->beam_damage;
+                popup_spawn(gs, gs->enemies[i].pos, gs->beam_damage,
+                    (Color){255, 150, 150, 255});
                 if (gs->enemies[i].hp <= 0) {
                     kill_enemy(gs, i);
                 }
@@ -341,6 +347,8 @@ void nova_update(GameState *gs, float dt) {
 
             if (dist > ring_inner && dist < ring_outer) {
                 gs->enemies[i].hp -= gs->nova_damage;
+                popup_spawn(gs, gs->enemies[i].pos, gs->nova_damage,
+                    (Color){255, 200, 255, 255});
                 if (gs->enemies[i].hp <= 0) {
                     kill_enemy(gs, i);
                 }

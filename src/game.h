@@ -117,6 +117,15 @@ typedef struct {
 
 typedef struct {
     Vector2 pos;
+    float life;
+    float max_life;
+    int value;
+    Color color;
+    bool active;
+} Popup;
+
+typedef struct {
+    Vector2 pos;
     Vector2 vel;
     int hp;
     int max_hp;
@@ -180,7 +189,10 @@ typedef struct {
     bool boss_defeated;
 
     Particle particles[MAX_PARTICLES];
+    Popup popups[MAX_POPUPS];
     float shake_amount;
+    float flash_amount;
+    Color flash_color;
 
     GameScene scene;
     float scene_timer;
@@ -231,6 +243,12 @@ void particles_spawn_burst(GameState *gs, Vector2 pos, Color color, int count);
 void particles_update(GameState *gs, float dt);
 void particles_draw(const GameState *gs, float scale, Vector2 offset);
 void shake_add(GameState *gs, float amount);
+
+void popup_spawn(GameState *gs, Vector2 pos, int value, Color color);
+void popups_update(GameState *gs, float dt);
+void popups_draw(const GameState *gs, float scale, Vector2 offset);
+void flash_trigger(GameState *gs, Color color, float amount);
+void flash_draw(const GameState *gs);
 
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);

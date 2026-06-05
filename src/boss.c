@@ -97,6 +97,7 @@ void boss_take_damage(GameState *gs, int damage) {
     b->hp -= damage;
     audio_play(SFX_BOSS_HIT);
     shake_add(gs, 1.0f);
+    popup_spawn(gs, b->pos, damage, (Color){255, 255, 100, 255});
 
     if (b->hp <= 0) {
         b->active = false;

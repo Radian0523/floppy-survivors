@@ -115,6 +115,14 @@
 #define PARTICLE_LIFE 0.5f
 #define PARTICLE_SPEED 180.0f
 
+// Popups (damage numbers, etc.)
+#define MAX_POPUPS 64
+#define POPUP_LIFE 0.7f
+#define POPUP_RISE_SPEED 60.0f
+
+// Flash
+#define FLASH_DECAY 3.0f
+
 // Screen shake
 #define SHAKE_HIT 4.0f
 #define SHAKE_KILL 2.0f
