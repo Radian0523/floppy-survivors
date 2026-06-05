@@ -1,0 +1,16 @@
+# Build artifacts
+disk_survivor
+disk_survivor_x86
+disk_survivor.exe
+*.o
+*.a
+
+# Dependencies (downloaded)
+deps/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+*.swp

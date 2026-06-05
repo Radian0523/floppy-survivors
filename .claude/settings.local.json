@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list *)",
+      "Bash(pkg-config --modversion raylib)",
+      "Bash(brew install *)",
+      "Bash(make mac *)",
+      "Bash(./disk_survivor)",
+      "Bash(mkdir -p /Users/oonishidaichi/floppy-survivors/deps)",
+      "Bash(curl -L -o raylib-5.5_win64_mingw-w64.zip \"https://github.com/raysan5/raylib/releases/download/5.5/raylib-5.5_win64_mingw-w64.zip\")",
+      "Bash(unzip -o raylib-5.5_win64_mingw-w64.zip)",
+      "Bash(make win *)",
+      "Bash(pkill -f disk_survivor)"
+    ]
+  }
+}
