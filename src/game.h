@@ -227,6 +227,7 @@ void player_init(Player *p, float scale);
 void player_update(Player *p, float dt, float scale);
 void player_take_damage(GameState *gs, int damage);
 void player_draw(const Player *p, float scale, Vector2 offset);
+void player_draw_hp_bar(const Player *p, float scale, Vector2 offset);
 
 void weapon_update(GameState *gs, float dt);
 void bullet_update(GameState *gs, float dt);

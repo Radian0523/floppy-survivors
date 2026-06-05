@@ -209,6 +209,7 @@ static void draw_game_world(const GameState *gs) {
 
     EndBlendMode();
 
+    player_draw_hp_bar(&gs->player, gs->scale, shake_offset);
     popups_draw(gs, gs->scale, shake_offset);
 }
 

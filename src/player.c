@@ -74,3 +74,27 @@ void player_draw(const Player *p, float scale, Vector2 offset) {
     DrawCircleV((Vector2){x, y}, r, (Color){0, 255, 255, 255});
     DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){100, 255, 255, 200});
 }
+
+void player_draw_hp_bar(const Player *p, float scale, Vector2 offset) {
+    float r = PLAYER_RADIUS * scale;
+    float x = p->pos.x * scale + offset.x;
+    float y = p->pos.y * scale + offset.y;
+
+    int bar_w = (int)(r * 3.0f);
+    int bar_h = (int)(3.0f * scale);
+    if (bar_h < 3) bar_h = 3;
+    int bar_x = (int)(x - bar_w / 2);
+    int bar_y = (int)(y - r - 10 * scale);
+
+    float ratio = (float)p->hp / p->max_hp;
+    if (ratio < 0) ratio = 0;
+
+    Color fg;
+    if (ratio > 0.6f)      fg = (Color){100, 255, 150, 255};
+    else if (ratio > 0.3f) fg = (Color){255, 220, 80, 255};
+    else                   fg = (Color){255, 80, 80, 255};
+
+    DrawRectangle(bar_x - 1, bar_y - 1, bar_w + 2, bar_h + 2, (Color){0, 0, 0, 180});
+    DrawRectangle(bar_x, bar_y, bar_w, bar_h, (Color){40, 40, 60, 220});
+    DrawRectangle(bar_x, bar_y, (int)(bar_w * ratio), bar_h, fg);
+}
