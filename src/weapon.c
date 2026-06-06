@@ -19,6 +19,22 @@ static Color enemy_color_for_type(EnemyType type) {
     }
 }
 
+static GemTier gem_tier_for_enemy(EnemyType type, bool elite) {
+    if (elite) return GEM_TIER_L;
+    switch (type) {
+        case ENEMY_BIT:
+        case ENEMY_FRAGMENT:
+        case ENEMY_SWARM:
+        case ENEMY_SPLITTER_CHILD:
+            return GEM_TIER_S;
+        case ENEMY_PACKET:
+        case ENEMY_BADSECTOR:
+            return GEM_TIER_L;
+        default:
+            return GEM_TIER_M;
+    }
+}
+
 static void kill_enemy(GameState *gs, int idx) {
     Enemy *e = &gs->enemies[idx];
     Vector2 pos = e->pos;
@@ -29,7 +45,7 @@ static void kill_enemy(GameState *gs, int idx) {
     particles_spawn_burst(gs, pos, enemy_color_for_type(type), burst);
     shake_add(gs, was_elite ? SHAKE_BOSS_HIT : SHAKE_KILL);
 
-    gem_spawn(gs, pos);
+    gem_spawn_tier(gs, pos, gem_tier_for_enemy(type, was_elite));
     if (was_elite) {
         chest_drop(gs, pos);
         // Bonus gems around the elite

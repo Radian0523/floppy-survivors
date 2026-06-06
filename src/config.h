@@ -182,12 +182,15 @@
 #define SPAWN_MARGIN 40.0f
 
 // Gems / XP
-#define GEM_XP_VALUE 1
 #define GEM_RADIUS 6.0f
 #define GEM_PICKUP_RANGE 48.0f
 #define MAX_GEMS 512
 #define XP_BASE_REQUIREMENT 5
 #define XP_PER_LEVEL 3
+// Per-tier XP values
+#define GEM_XP_S 1
+#define GEM_XP_M 3
+#define GEM_XP_L 7
 
 // Upgrades
 #define UPGRADE_CHOICES 3

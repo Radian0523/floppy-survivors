@@ -156,8 +156,16 @@ typedef struct {
     bool active;
 } EnemyBullet;
 
+typedef enum {
+    GEM_TIER_S,
+    GEM_TIER_M,
+    GEM_TIER_L,
+    GEM_TIER_COUNT
+} GemTier;
+
 typedef struct {
     Vector2 pos;
+    GemTier tier;
     bool active;
 } Gem;
 
@@ -484,6 +492,7 @@ void score_save(const BestScore *s);
 int score_update(BestScore *s, float time, int kills, int level, bool boss_killed);
 
 void gem_spawn(GameState *gs, Vector2 pos);
+void gem_spawn_tier(GameState *gs, Vector2 pos, GemTier tier);
 void gem_update(GameState *gs, float dt);
 void gem_draw(const Gem gems[], float scale, Vector2 offset);
 

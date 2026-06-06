@@ -107,13 +107,21 @@ void boss_take_damage(GameState *gs, int damage) {
         particles_spawn_burst(gs, b->pos, (Color){255, 200, 50, 255}, 60);
         shake_add(gs, SHAKE_BOSS_HIT * 2);
 
-        for (int i = 0; i < 20; i++) {
-            float angle = (2.0f * 3.14159f * i) / 20.0f;
+        for (int i = 0; i < 8; i++) {
+            float angle = (2.0f * 3.14159f * i) / 8.0f;
             Vector2 pos = {
                 b->pos.x + cosf(angle) * 30,
                 b->pos.y + sinf(angle) * 30
             };
-            gem_spawn(gs, pos);
+            gem_spawn_tier(gs, pos, GEM_TIER_L);
+        }
+        for (int i = 0; i < 12; i++) {
+            float angle = (2.0f * 3.14159f * i) / 12.0f + 0.2f;
+            Vector2 pos = {
+                b->pos.x + cosf(angle) * 50,
+                b->pos.y + sinf(angle) * 50
+            };
+            gem_spawn_tier(gs, pos, GEM_TIER_M);
         }
     }
 }
