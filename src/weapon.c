@@ -23,11 +23,24 @@ static void kill_enemy(GameState *gs, int idx) {
     Enemy *e = &gs->enemies[idx];
     Vector2 pos = e->pos;
     EnemyType type = e->type;
+    bool was_elite = e->is_elite;
 
-    particles_spawn_burst(gs, pos, enemy_color_for_type(type), 10);
-    shake_add(gs, SHAKE_KILL);
+    int burst = was_elite ? 30 : 10;
+    particles_spawn_burst(gs, pos, enemy_color_for_type(type), burst);
+    shake_add(gs, was_elite ? SHAKE_BOSS_HIT : SHAKE_KILL);
 
     gem_spawn(gs, pos);
+    if (was_elite) {
+        chest_drop(gs, pos);
+        // Bonus gems around the elite
+        for (int i = 0; i < 5; i++) {
+            float a = (2.0f * 3.14159f * i) / 5.0f;
+            Vector2 gp = {pos.x + cosf(a) * 18.0f, pos.y + sinf(a) * 18.0f};
+            gem_spawn(gs, gp);
+        }
+    } else {
+        item_drop_roll(gs, type, pos);
+    }
     e->active = false;
     gs->kills++;
     audio_play(SFX_ENEMY_DIE);

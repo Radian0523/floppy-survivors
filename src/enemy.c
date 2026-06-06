@@ -31,6 +31,7 @@ static void init_enemy_stats(Enemy *e, EnemyType type, float time_bonus) {
     e->type_timer = 0;
     e->phase_timer = 0;
     e->phased = false;
+    e->is_elite = false;
 
     switch (type) {
         case ENEMY_BIT:
@@ -207,6 +208,92 @@ void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos) {
     }
 }
 
+static void spawn_elite(GameState *gs) {
+    // Pick an enemy type appropriate for time (medium/heavy)
+    EnemyType candidates[] = {
+        ENEMY_PACKET, ENEMY_GLITCH, ENEMY_BOMBER, ENEMY_RANGER,
+        ENEMY_PHASER, ENEMY_TRACKER, ENEMY_SPLITTER, ENEMY_BADSECTOR
+    };
+    int n = (int)(sizeof(candidates) / sizeof(candidates[0]));
+    EnemyType type = candidates[rand() % n];
+
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (!gs->enemies[i].active) {
+            Enemy *e = &gs->enemies[i];
+            e->active = true;
+            e->pos = random_spawn_pos();
+            float time_bonus = gs->game_time / GAME_DURATION * ENEMY_SPEED_TIME_BONUS;
+            init_enemy_stats(e, type, time_bonus);
+            e->is_elite = true;
+            e->hp *= ELITE_HP_MULT;
+            e->radius *= ELITE_RADIUS_MULT;
+            audio_play(SFX_BOSS_SPAWN);
+            return;
+        }
+    }
+}
+
+static void spawn_formation(GameState *gs) {
+    int kind = rand() % 2;
+    float time_bonus = gs->game_time / GAME_DURATION * ENEMY_SPEED_TIME_BONUS;
+    EnemyType type = choose_enemy_type(gs->game_time);
+
+    if (kind == 0) {
+        // Ring around player
+        Vector2 c = gs->player.pos;
+        for (int i = 0; i < FORMATION_RING_COUNT; i++) {
+            float ang = (2.0f * 3.14159f * i) / FORMATION_RING_COUNT;
+            Vector2 pos = {
+                c.x + cosf(ang) * FORMATION_RING_RADIUS,
+                c.y + sinf(ang) * FORMATION_RING_RADIUS
+            };
+            for (int j = 0; j < MAX_ENEMIES; j++) {
+                if (!gs->enemies[j].active) {
+                    Enemy *e = &gs->enemies[j];
+                    e->active = true;
+                    e->pos = pos;
+                    init_enemy_stats(e, type, time_bonus);
+                    break;
+                }
+            }
+        }
+    } else {
+        // Line from one side
+        int side = rand() % 4;
+        for (int i = 0; i < FORMATION_LINE_COUNT; i++) {
+            Vector2 pos;
+            float t = (float)i / (FORMATION_LINE_COUNT - 1);
+            switch (side) {
+                case 0:
+                    pos.x = LOGICAL_W * t;
+                    pos.y = -SPAWN_MARGIN;
+                    break;
+                case 1:
+                    pos.x = LOGICAL_W * t;
+                    pos.y = LOGICAL_H + SPAWN_MARGIN;
+                    break;
+                case 2:
+                    pos.x = -SPAWN_MARGIN;
+                    pos.y = LOGICAL_H * t;
+                    break;
+                default:
+                    pos.x = LOGICAL_W + SPAWN_MARGIN;
+                    pos.y = LOGICAL_H * t;
+                    break;
+            }
+            for (int j = 0; j < MAX_ENEMIES; j++) {
+                if (!gs->enemies[j].active) {
+                    Enemy *e = &gs->enemies[j];
+                    e->active = true;
+                    e->pos = pos;
+                    init_enemy_stats(e, ENEMY_FRAGMENT, time_bonus);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 static void update_one_enemy(GameState *gs, Enemy *e, float dt) {
     float dx = gs->player.pos.x - e->pos.x;
     float dy = gs->player.pos.y - e->pos.y;
@@ -314,6 +401,18 @@ void enemy_update(GameState *gs, float dt) {
         }
     }
 
+    if (gs->elite_timer > 0) gs->elite_timer -= dt;
+    if (gs->elite_timer <= 0 && gs->game_time >= ELITE_FIRST_TIME) {
+        spawn_elite(gs);
+        gs->elite_timer = ELITE_INTERVAL;
+    }
+
+    if (gs->formation_timer > 0) gs->formation_timer -= dt;
+    if (gs->formation_timer <= 0 && gs->game_time >= FORMATION_FIRST_TIME) {
+        spawn_formation(gs);
+        gs->formation_timer = FORMATION_INTERVAL;
+    }
+
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!gs->enemies[i].active) continue;
         update_one_enemy(gs, &gs->enemies[i], dt);
@@ -342,6 +441,22 @@ static void draw_enemy(const Enemy *e, float scale, Vector2 offset) {
     float x = e->pos.x * scale + offset.x;
     float y = e->pos.y * scale + offset.y;
     float r = e->radius * scale;
+
+    if (e->is_elite) {
+        float pulse = 0.6f + 0.4f * sinf((float)GetTime() * 6.0f);
+        Color aura = {255, 220, 100, (unsigned char)(120 * pulse)};
+        DrawCircleV((Vector2){x, y}, r * 1.6f, aura);
+        DrawRing((Vector2){x, y}, r * 1.35f, r * 1.5f, 0, 360, 24,
+            (Color){255, 230, 130, (unsigned char)(180 * pulse)});
+        // Crown marker
+        float cy = y - r * 1.7f;
+        for (int k = -1; k <= 1; k++) {
+            Vector2 tip = {x + k * r * 0.3f, cy};
+            Vector2 bl = {x + (k - 0.3f) * r * 0.3f, cy + r * 0.3f};
+            Vector2 br = {x + (k + 0.3f) * r * 0.3f, cy + r * 0.3f};
+            DrawTriangle(tip, bl, br, (Color){255, 230, 130, 230});
+        }
+    }
 
     Color col = get_enemy_color(e->type);
     if (e->phased) {

@@ -54,6 +54,23 @@ void scene_title_draw(const GameState *gs) {
     int cr_size = 12;
     int crw = MeasureText(credit, cr_size);
     DrawText(credit, (sw - crw) / 2, sh - 30, cr_size, (Color){100, 100, 120, 200});
+
+    if (gs->best.total_games > 0) {
+        char buf[96];
+        int m = (int)gs->best.best_time / 60;
+        int s = (int)gs->best.best_time % 60;
+        sprintf(buf, "BEST  %d:%02d  -  KILLS %d  -  LV %d",
+            m, s, gs->best.best_kills, gs->best.best_level);
+        int bs = 14;
+        int bw = MeasureText(buf, bs);
+        DrawText(buf, (sw - bw) / 2, sh / 2 + 130, bs, (Color){180, 200, 220, 220});
+        if (gs->best.boss_defeats > 0) {
+            char bd[48];
+            sprintf(bd, "FORMAT DEFEATED x%d", gs->best.boss_defeats);
+            int bdw = MeasureText(bd, bs);
+            DrawText(bd, (sw - bdw) / 2, sh / 2 + 152, bs, (Color){255, 200, 100, 220});
+        }
+    }
 }
 
 static const char *weapon_names[STARTING_WEAPON_COUNT] = {
@@ -316,6 +333,37 @@ void scene_result_draw(const GameState *gs) {
         int bmw = MeasureText(boss_msg, bms);
         DrawText(boss_msg, (sw - bmw) / 2, line_y + line_gap * 3 + 10, bms,
             (Color){255, 200, 50, 255});
+    }
+
+    int badge_y = line_y + line_gap * 4 + 16;
+    float blink_t = sinf(gs->scene_timer * 5.0f);
+    if (blink_t > -0.3f && gs->last_score_flags) {
+        const char *labels[4] = {"NEW TIME", "NEW KILLS", "NEW LEVEL", "FIRST CLEAR"};
+        Color colors[4] = {
+            {100, 255, 200, 255},
+            {255, 200, 100, 255},
+            {100, 200, 255, 255},
+            {255, 100, 255, 255}
+        };
+        int count = 0;
+        int total_w = 0;
+        int label_idx[4];
+        int label_w[4];
+        for (int i = 0; i < 4; i++) {
+            if (gs->last_score_flags & (1 << i)) {
+                label_idx[count] = i;
+                label_w[count] = MeasureText(labels[i], 16);
+                total_w += label_w[count];
+                count++;
+            }
+        }
+        total_w += (count - 1) * 16;
+        int x = (sw - total_w) / 2;
+        for (int i = 0; i < count; i++) {
+            int idx = label_idx[i];
+            DrawText(labels[idx], x, badge_y, 16, colors[idx]);
+            x += label_w[i] + 16;
+        }
     }
 
     if (gs->scene_timer >= 0.5f) {

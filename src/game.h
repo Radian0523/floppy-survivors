@@ -137,6 +137,7 @@ typedef struct {
     float type_timer;
     float phase_timer;
     bool phased;
+    bool is_elite;
     bool active;
 } Enemy;
 
@@ -150,6 +151,33 @@ typedef struct {
     Vector2 pos;
     bool active;
 } Gem;
+
+typedef struct {
+    float best_time;
+    int best_kills;
+    int best_level;
+    int boss_defeats;
+    int total_games;
+} BestScore;
+
+typedef enum {
+    ITEM_HP,
+    ITEM_MAGNET,
+    ITEM_TYPE_COUNT
+} ItemType;
+
+typedef struct {
+    Vector2 pos;
+    ItemType type;
+    float life;
+    bool active;
+} Item;
+
+typedef struct {
+    Vector2 pos;
+    float life;
+    bool active;
+} Chest;
 
 typedef struct {
     Vector2 pos;
@@ -258,6 +286,8 @@ typedef struct {
 
     float spawn_timer;
     float spawn_interval;
+    float elite_timer;
+    float formation_timer;
 
     float game_time;
     bool game_over;
@@ -271,6 +301,9 @@ typedef struct {
     Particle particles[MAX_PARTICLES];
     Popup popups[MAX_POPUPS];
     EnemyBullet enemy_bullets[MAX_ENEMY_BULLETS];
+    Item items[MAX_ITEMS];
+    Chest chests[MAX_CHESTS];
+    float magnet_pull_timer;
     float shake_amount;
     float flash_amount;
     Color flash_color;
@@ -279,6 +312,9 @@ typedef struct {
     float scene_timer;
     int weapon_select_hover;
     bool paused;
+
+    BestScore best;
+    int last_score_flags;
 
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
@@ -339,6 +375,14 @@ void enemy_bullet_spawn(GameState *gs, Vector2 pos, Vector2 dir);
 void enemy_bullets_update(GameState *gs, float dt);
 void enemy_bullets_draw(const GameState *gs, float scale, Vector2 offset);
 
+void items_init(GameState *gs);
+void item_drop_roll(GameState *gs, EnemyType type, Vector2 pos);
+void chest_drop(GameState *gs, Vector2 pos);
+void items_update(GameState *gs, float dt);
+void items_draw(const GameState *gs, float scale, Vector2 offset);
+void chests_update(GameState *gs, float dt);
+void chests_draw(const GameState *gs, float scale, Vector2 offset);
+
 void boss_spawn(GameState *gs);
 void boss_update(GameState *gs, float dt);
 void boss_draw(const GameState *gs, float scale, Vector2 offset);
@@ -396,6 +440,11 @@ void bgm_init(void);
 void bgm_play(BgmId id);
 void bgm_stop(void);
 void bgm_cleanup(void);
+
+void score_load(BestScore *s);
+void score_save(const BestScore *s);
+// Returns flags: bit0=time, bit1=kills, bit2=level, bit3=first_boss
+int score_update(BestScore *s, float time, int kills, int level, bool boss_killed);
 
 void gem_spawn(GameState *gs, Vector2 pos);
 void gem_update(GameState *gs, float dt);

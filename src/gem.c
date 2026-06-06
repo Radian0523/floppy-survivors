@@ -12,6 +12,9 @@ void gem_spawn(GameState *gs, Vector2 pos) {
 }
 
 void gem_update(GameState *gs, float dt) {
+    if (gs->magnet_pull_timer > 0) gs->magnet_pull_timer -= dt;
+    bool magnet_active = gs->magnet_pull_timer > 0;
+
     for (int i = 0; i < MAX_GEMS; i++) {
         if (!gs->gems[i].active) continue;
 
@@ -20,7 +23,13 @@ void gem_update(GameState *gs, float dt) {
         float dy = gs->player.pos.y - g->pos.y;
         float dist = sqrtf(dx * dx + dy * dy);
 
-        if (dist < gs->player.pickup_range) {
+        if (magnet_active) {
+            float pull_speed = 600.0f;
+            if (dist > 0) {
+                g->pos.x += (dx / dist) * pull_speed * dt;
+                g->pos.y += (dy / dist) * pull_speed * dt;
+            }
+        } else if (dist < gs->player.pickup_range) {
             float pull_speed = 200.0f;
             if (dist > 0) {
                 g->pos.x += (dx / dist) * pull_speed * dt;

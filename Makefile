@@ -8,7 +8,7 @@ LDFLAGS = -flto
 
 SRCS = src/main.c src/player.c src/weapon.c src/enemy.c src/gem.c src/render.c \
        src/input.c src/upgrade.c src/boss.c src/scene.c src/audio.c src/particle.c \
-       src/bgm.c src/weapon_extra.c
+       src/bgm.c src/weapon_extra.c src/score.c src/item.c
 TARGET = disk_survivor
 
 # Size limit (1.44 MB floppy)

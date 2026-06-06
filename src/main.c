@@ -60,6 +60,8 @@ static void game_init(GameState *gs) {
 
     gs->spawn_timer = 1.0f;
     gs->spawn_interval = SPAWN_INTERVAL_INITIAL;
+    gs->elite_timer = ELITE_FIRST_TIME;
+    gs->formation_timer = FORMATION_FIRST_TIME;
 
     gs->game_time = 0;
     gs->game_over = false;
@@ -70,10 +72,13 @@ static void game_init(GameState *gs) {
     gs->boss_defeated = false;
 
     particles_init(gs);
+    items_init(gs);
+    gs->magnet_pull_timer = 0;
 
     gs->upgrading = false;
     gs->upgrade_hover = -1;
     gs->paused = false;
+    gs->last_score_flags = 0;
 }
 
 void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
@@ -157,6 +162,8 @@ static void update_game(GameState *gs, float dt) {
         gs->victory = true;
         gs->scene = SCENE_RESULT;
         gs->scene_timer = 0;
+        gs->last_score_flags = score_update(&gs->best, gs->game_time, gs->kills,
+            gs->level, true);
         return;
     }
 
@@ -165,6 +172,8 @@ static void update_game(GameState *gs, float dt) {
         gs->victory = true;
         gs->scene = SCENE_RESULT;
         gs->scene_timer = 0;
+        gs->last_score_flags = score_update(&gs->best, gs->game_time, gs->kills,
+            gs->level, false);
         return;
     }
 
@@ -173,6 +182,8 @@ static void update_game(GameState *gs, float dt) {
         gs->victory = false;
         gs->scene = SCENE_RESULT;
         gs->scene_timer = 0;
+        gs->last_score_flags = score_update(&gs->best, gs->game_time, gs->kills,
+            gs->level, false);
         return;
     }
 
@@ -191,6 +202,8 @@ static void update_game(GameState *gs, float dt) {
     enemy_bullets_update(gs, dt);
     boss_update(gs, dt);
     gem_update(gs, dt);
+    items_update(gs, dt);
+    chests_update(gs, dt);
     particles_update(gs, dt);
 }
 
@@ -219,6 +232,8 @@ static void draw_game_world(const GameState *gs) {
     enemy_bullets_draw(gs, gs->scale, shake_offset);
     boss_draw(gs, gs->scale, shake_offset);
     gem_draw(gs->gems, gs->scale, shake_offset);
+    items_draw(gs, gs->scale, shake_offset);
+    chests_draw(gs, gs->scale, shake_offset);
     particles_draw(gs, gs->scale, shake_offset);
     player_draw(&gs->player, gs->scale, shake_offset);
 
@@ -248,6 +263,7 @@ int main(void) {
     GameState gs = {0};
     gs.scene = SCENE_TITLE;
     gs.scene_timer = 0;
+    score_load(&gs.best);
     game_init(&gs);
 
     while (!WindowShouldClose()) {

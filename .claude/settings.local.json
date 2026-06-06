@@ -22,7 +22,8 @@
       "Bash(make CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar PLATFORM=PLATFORM_DESKTOP OS=Windows_NT RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")",
       "Bash(make -B win)",
       "Bash(make -B mac)",
-      "Bash(make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")"
+      "Bash(make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")",
+      "Bash(grep -n \"BestScore\\\\|GameState\\\\|^typedef struct {$\\\\|^} \" /Users/oonishidaichi/floppy-survivors/src/game.h)"
     ]
   }
 }

@@ -84,6 +84,29 @@
 #define WHIP_ARC 2.0f
 #define WHIP_DAMAGE 2
 
+// Items & Chests
+#define MAX_ITEMS 32
+#define MAX_CHESTS 8
+#define ITEM_RADIUS 9.0f
+#define ITEM_LIFE 15.0f
+#define CHEST_RADIUS 14.0f
+#define CHEST_LIFE 25.0f
+#define ITEM_DROP_CHANCE 14
+#define ITEM_HP_HEAL 2
+
+// Elite (mini-boss) spawns
+#define ELITE_FIRST_TIME 45.0f
+#define ELITE_INTERVAL 55.0f
+#define ELITE_HP_MULT 5
+#define ELITE_RADIUS_MULT 1.6f
+
+// Formation events (ring/line of enemies)
+#define FORMATION_FIRST_TIME 75.0f
+#define FORMATION_INTERVAL 70.0f
+#define FORMATION_RING_COUNT 12
+#define FORMATION_RING_RADIUS 220.0f
+#define FORMATION_LINE_COUNT 10
+
 // Enemy
 #define ENEMY_BASE_HP 2
 #define ENEMY_BASE_SPEED 54.0f
