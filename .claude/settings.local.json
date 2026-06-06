@@ -30,7 +30,10 @@
       "Bash(python3 *)",
       "Bash(pip3 install *)",
       "Bash(./disk_survivor --bot)",
-      "Bash(gh issue *)"
+      "Bash(gh issue *)",
+      "Bash(grep -E '\\\\.\\(json|sav|cfg\\)$')",
+      "Bash(git mv *)",
+      "Bash(git rm *)"
     ]
   }
 }

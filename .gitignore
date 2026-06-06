@@ -8,6 +8,10 @@ disk_survivor.exe
 # Dependencies (downloaded)
 deps/
 
+# Runtime user data (best score, settings)
+*.sav
+*.cfg
+
 # macOS
 .DS_Store
 
