@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include "config.h"
+#include "params.h"
 #include <stdbool.h>
 
 typedef enum {
@@ -318,6 +319,8 @@ typedef struct {
 
     bool debug_open;
     bool debug_invincible;
+    bool bot_mode;
+    bool headless;
 
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
@@ -329,7 +332,7 @@ typedef struct {
 
 // Module functions
 void player_init(Player *p, float scale);
-void player_update(Player *p, float dt, float scale);
+void player_update(GameState *gs, float dt, float scale);
 void player_take_damage(GameState *gs, int damage);
 void player_draw(const Player *p, float scale, Vector2 offset);
 void player_draw_hp_bar(const Player *p, float scale, Vector2 offset);
@@ -386,6 +389,8 @@ void enemy_spawn_formation_force(GameState *gs);
 
 void debug_update(GameState *gs);
 void debug_draw(const GameState *gs);
+
+void upgrade_auto_pick(GameState *gs);
 void items_update(GameState *gs, float dt);
 void items_draw(const GameState *gs, float scale, Vector2 offset);
 void chests_update(GameState *gs, float dt);
@@ -407,6 +412,8 @@ void popups_update(GameState *gs, float dt);
 void popups_draw(const GameState *gs, float scale, Vector2 offset);
 void flash_trigger(GameState *gs, Color color, float amount);
 void flash_draw(const GameState *gs);
+
+Vector2 bot_compute_direction(const GameState *gs);
 
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);

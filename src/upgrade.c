@@ -128,6 +128,15 @@ void upgrade_start(GameState *gs) {
     }
 }
 
+static void apply_upgrade(GameState *gs, UpgradeType type);
+
+void upgrade_auto_pick(GameState *gs) {
+    if (!gs->upgrading) return;
+    int idx = rand() % UPGRADE_CHOICES;
+    apply_upgrade(gs, gs->upgrade_choices[idx]);
+    gs->upgrading = false;
+}
+
 static void apply_upgrade(GameState *gs, UpgradeType type) {
     switch (type) {
         case UPGRADE_RAPID_FIRE:
@@ -202,6 +211,11 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
 
 void upgrade_update(GameState *gs) {
     if (!gs->upgrading) return;
+
+    if (gs->bot_mode) {
+        upgrade_auto_pick(gs);
+        return;
+    }
 
     int box_w = 180;
     int box_h = 80;

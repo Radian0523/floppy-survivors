@@ -210,6 +210,14 @@
 #define GAME_DURATION 300.0f
 #define DT_MAX 0.04f
 
+// Difficulty (0..100). Maps to the 8 param multipliers via params_from_difficulty().
+// CLI / debug can override at runtime, but this is the default for normal play.
+#define DIFFICULTY 50
+#define DIFFICULTY_EASY    20
+#define DIFFICULTY_NORMAL  50
+#define DIFFICULTY_HARD    75
+#define DIFFICULTY_BRUTAL  90
+
 // Particles
 #define MAX_PARTICLES 512
 #define PARTICLE_LIFE 0.5f

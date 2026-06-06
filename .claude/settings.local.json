@@ -23,7 +23,13 @@
       "Bash(make -B win)",
       "Bash(make -B mac)",
       "Bash(make PLATFORM=PLATFORM_DESKTOP RAYLIB_LIBTYPE=STATIC RAYLIB_BUILD_MODE=RELEASE CUSTOM_CFLAGS=\"-Os -ffunction-sections -fdata-sections -fno-asynchronous-unwind-tables -fno-ident\")",
-      "Bash(grep -n \"BestScore\\\\|GameState\\\\|^typedef struct {$\\\\|^} \" /Users/oonishidaichi/floppy-survivors/src/game.h)"
+      "Bash(grep -n \"BestScore\\\\|GameState\\\\|^typedef struct {$\\\\|^} \" /Users/oonishidaichi/floppy-survivors/src/game.h)",
+      "Bash(time ./disk_survivor --headless --bot --seed=42 --output=/tmp/run.txt)",
+      "Read(//tmp/**)",
+      "Bash(./disk_survivor --headless --bot --seed=42 --params=enemy_hp_mult=2.0,enemy_spawn_min_mult=0.5 --output=/tmp/hard.txt)",
+      "Bash(python3 *)",
+      "Bash(pip3 install *)",
+      "Bash(./disk_survivor --bot)"
     ]
   }
 }

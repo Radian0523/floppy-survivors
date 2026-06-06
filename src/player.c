@@ -8,23 +8,30 @@ void player_init(Player *p, float scale) {
     p->vel.x = 0;
     p->vel.y = 0;
     p->facing_angle = 0;
-    p->hp = PLAYER_MAX_HP;
-    p->max_hp = PLAYER_MAX_HP;
+    int hp_scaled = (int)(PLAYER_MAX_HP * g_params.player_hp_mult + 0.5f);
+    if (hp_scaled < 1) hp_scaled = 1;
+    p->hp = hp_scaled;
+    p->max_hp = hp_scaled;
     p->invincible_timer = 0;
-    p->speed = PLAYER_SPEED;
+    p->speed = PLAYER_SPEED * g_params.player_speed_mult;
     p->pickup_range = GEM_PICKUP_RANGE;
 }
 
-void player_update(Player *p, float dt, float scale) {
+void player_update(GameState *gs, float dt, float scale) {
+    Player *p = &gs->player;
     if (p->invincible_timer > 0) {
         p->invincible_timer -= dt;
     }
 
-    Vector2 dir = input_get_move_direction();
-
-    if (input_is_mouse_active()) {
-        Vector2 screen_pos = {p->pos.x * scale, p->pos.y * scale};
-        dir = input_get_mouse_direction(screen_pos);
+    Vector2 dir;
+    if (gs->bot_mode) {
+        dir = bot_compute_direction(gs);
+    } else {
+        dir = input_get_move_direction();
+        if (input_is_mouse_active()) {
+            Vector2 screen_pos = {p->pos.x * scale, p->pos.y * scale};
+            dir = input_get_mouse_direction(screen_pos);
+        }
     }
 
     p->vel.x = dir.x * p->speed;
@@ -48,9 +55,11 @@ void player_take_damage(GameState *gs, int damage) {
     Player *p = &gs->player;
     if (gs->debug_invincible) return;
     if (p->invincible_timer > 0) return;
-    p->hp -= damage;
+    int scaled = (int)(damage * g_params.enemy_damage_mult + 0.5f);
+    if (scaled < 1) scaled = 1;
+    p->hp -= scaled;
     if (p->hp < 0) p->hp = 0;
-    p->invincible_timer = PLAYER_INVINCIBLE_TIME;
+    p->invincible_timer = PLAYER_INVINCIBLE_TIME * g_params.player_invincible_mult;
     audio_play(SFX_PLAYER_HIT);
     particles_spawn_burst(gs, p->pos, (Color){255, 255, 255, 255}, 16);
     shake_add(gs, SHAKE_HIT);

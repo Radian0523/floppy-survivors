@@ -159,23 +159,13 @@ static void update_game(GameState *gs, float dt) {
         boss_spawn(gs);
     }
 
-    if (gs->boss_defeated) {
-        gs->game_over = true;
-        gs->victory = true;
-        gs->scene = SCENE_RESULT;
-        gs->scene_timer = 0;
-        gs->last_score_flags = score_update(&gs->best, gs->game_time, gs->kills,
-            gs->level, true);
-        return;
-    }
-
     if (gs->game_time >= GAME_DURATION) {
         gs->game_over = true;
         gs->victory = true;
         gs->scene = SCENE_RESULT;
         gs->scene_timer = 0;
         gs->last_score_flags = score_update(&gs->best, gs->game_time, gs->kills,
-            gs->level, false);
+            gs->level, gs->boss_defeated);
         return;
     }
 
@@ -189,7 +179,7 @@ static void update_game(GameState *gs, float dt) {
         return;
     }
 
-    player_update(&gs->player, dt, gs->scale);
+    player_update(gs, dt, gs->scale);
     weapon_update(gs, dt);
     bullet_update(gs, dt);
     orbiters_update(gs, dt);
@@ -245,8 +235,106 @@ static void draw_game_world(const GameState *gs) {
     popups_draw(gs, gs->scale, shake_offset);
 }
 
-int main(void) {
-    srand((unsigned)time(NULL));
+static void write_stats(const GameState *gs, const char *path,
+                        const ParamSet *p, bool ran_to_completion) {
+    FILE *f = fopen(path, "w");
+    if (!f) return;
+    fprintf(f, "duration=%.3f\n", gs->game_time);
+    fprintf(f, "survived=%d\n", (gs->player.hp > 0 && !gs->game_over) ? 1
+                                  : (gs->victory ? 1 : 0));
+    fprintf(f, "ran_to_completion=%d\n", ran_to_completion ? 1 : 0);
+    fprintf(f, "boss_defeated=%d\n", gs->boss_defeated ? 1 : 0);
+    fprintf(f, "boss_active=%d\n", gs->boss.active ? 1 : 0);
+    fprintf(f, "kills=%d\n", gs->kills);
+    fprintf(f, "level=%d\n", gs->level);
+    fprintf(f, "final_hp=%d\n", gs->player.hp);
+    fprintf(f, "max_hp=%d\n", gs->player.max_hp);
+    fprintf(f, "param_enemy_hp_mult=%f\n", p->enemy_hp_mult);
+    fprintf(f, "param_enemy_spawn_min_mult=%f\n", p->enemy_spawn_min_mult);
+    fprintf(f, "param_enemy_speed_bonus_mult=%f\n", p->enemy_speed_bonus_mult);
+    fprintf(f, "param_enemy_damage_mult=%f\n", p->enemy_damage_mult);
+    fprintf(f, "param_spawn_count_mult=%f\n", p->spawn_count_mult);
+    fprintf(f, "param_player_speed_mult=%f\n", p->player_speed_mult);
+    fprintf(f, "param_player_hp_mult=%f\n", p->player_hp_mult);
+    fprintf(f, "param_player_invincible_mult=%f\n", p->player_invincible_mult);
+    fclose(f);
+}
+
+static int run_headless(const CliOptions *opt) {
+    SetConfigFlags(FLAG_WINDOW_HIDDEN);
+    InitWindow(WINDOW_W, WINDOW_H, "DISK SURVIVOR (headless)");
+
+    GameState gs = {0};
+    gs.scene = SCENE_GAME;
+    gs.bot_mode = true;
+    gs.headless = true;
+    score_load(&gs.best);
+    game_init(&gs);
+    gs.has_pulse_bolt = true;
+
+    float dt = 0.033f;
+    float max_dur = opt->duration_set ? opt->duration_override : GAME_DURATION;
+    int max_ticks = (int)(max_dur / dt) + 100;
+    int ticks = 0;
+    bool ran_to_completion = false;
+
+    while (gs.player.hp > 0 && gs.game_time < max_dur) {
+        if (gs.upgrading) {
+            upgrade_auto_pick(&gs);
+        }
+        if (ticks++ > max_ticks) break;
+
+        gs.game_time += dt;
+        if (!gs.boss.active && !gs.boss_defeated &&
+            gs.game_time >= BOSS_SPAWN_TIME) {
+            boss_spawn(&gs);
+        }
+        player_update(&gs, dt, 1.0f);
+        weapon_update(&gs, dt);
+        bullet_update(&gs, dt);
+        orbiters_update(&gs, dt);
+        beam_update(&gs, dt);
+        nova_update(&gs, dt);
+        mines_update(&gs, dt);
+        chain_update(&gs, dt);
+        boomerang_update(&gs, dt);
+        trail_update(&gs, dt);
+        whip_update(&gs, dt);
+        enemy_update(&gs, dt);
+        enemy_bullets_update(&gs, dt);
+        boss_update(&gs, dt);
+        gem_update(&gs, dt);
+        items_update(&gs, dt);
+        chests_update(&gs, dt);
+        particles_update(&gs, dt);
+    }
+    ran_to_completion = (gs.game_time >= max_dur);
+
+    if (opt->output_path) {
+        write_stats(&gs, opt->output_path, &g_params, ran_to_completion);
+    } else {
+        fprintf(stderr, "duration=%.2f kills=%d level=%d boss=%d hp=%d/%d\n",
+            gs.game_time, gs.kills, gs.level,
+            gs.boss_defeated ? 1 : 0,
+            gs.player.hp, gs.player.max_hp);
+    }
+
+    CloseWindow();
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    CliOptions opt;
+    cli_parse(argc, argv, &opt);
+    params_from_difficulty(&g_params, (float)DIFFICULTY);
+    if (opt.params_arg && !params_apply_kv(&g_params, opt.params_arg)) {
+        return 1;
+    }
+    srand(opt.seed_set ? opt.seed : (unsigned)time(NULL));
+
+    if (opt.headless) {
+        return run_headless(&opt);
+    }
 
     InitWindow(WINDOW_W, WINDOW_H, "DISK SURVIVOR");
     SetTargetFPS(TARGET_FPS);
@@ -265,6 +353,7 @@ int main(void) {
     GameState gs = {0};
     gs.scene = SCENE_TITLE;
     gs.scene_timer = 0;
+    gs.bot_mode = opt.bot;
     score_load(&gs.best);
     game_init(&gs);
 

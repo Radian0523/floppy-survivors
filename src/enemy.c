@@ -107,6 +107,10 @@ static void init_enemy_stats(Enemy *e, EnemyType type, float time_bonus) {
 
     float variance = ((rand() % 100) / 100.0f - 0.5f) * 10.0f;
     e->speed += variance;
+
+    int scaled_hp = (int)(e->hp * g_params.enemy_hp_mult + 0.5f);
+    if (scaled_hp < 1) scaled_hp = 1;
+    e->hp = scaled_hp;
 }
 
 static EnemyType choose_enemy_type(float game_time) {
@@ -165,7 +169,8 @@ static EnemyType choose_enemy_type(float game_time) {
 
 void enemy_spawn(GameState *gs) {
     EnemyType type = choose_enemy_type(gs->game_time);
-    float time_bonus = gs->game_time / GAME_DURATION * ENEMY_SPEED_TIME_BONUS;
+    float time_bonus = gs->game_time / GAME_DURATION *
+        ENEMY_SPEED_TIME_BONUS * g_params.enemy_speed_bonus_mult;
 
     if (type == ENEMY_SWARM) {
         Vector2 base = random_spawn_pos();
@@ -398,14 +403,17 @@ void enemy_update(GameState *gs, float dt) {
     gs->spawn_timer -= dt;
     if (gs->spawn_timer <= 0) {
         float progress = gs->game_time / GAME_DURATION;
+        float spawn_min = SPAWN_INTERVAL_MIN * g_params.enemy_spawn_min_mult;
         gs->spawn_interval = SPAWN_INTERVAL_INITIAL -
-            progress * (SPAWN_INTERVAL_INITIAL - SPAWN_INTERVAL_MIN);
-        if (gs->spawn_interval < SPAWN_INTERVAL_MIN)
-            gs->spawn_interval = SPAWN_INTERVAL_MIN;
+            progress * (SPAWN_INTERVAL_INITIAL - spawn_min);
+        if (gs->spawn_interval < spawn_min)
+            gs->spawn_interval = spawn_min;
 
         gs->spawn_timer = gs->spawn_interval;
 
-        int spawn_count = 1 + (int)(progress * 3);
+        int base_count = 1 + (int)(progress * 3);
+        int spawn_count = (int)(base_count * g_params.spawn_count_mult + 0.5f);
+        if (spawn_count < 1) spawn_count = 1;
         for (int i = 0; i < spawn_count; i++) {
             enemy_spawn(gs);
         }
