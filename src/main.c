@@ -384,6 +384,11 @@ int main(int argc, char **argv) {
         BeginTextureMode(target);
         if (gs.scene == SCENE_TITLE || gs.scene == SCENE_WEAPON_SELECT) {
             render_background();
+            if (gs.scene == SCENE_TITLE) {
+                BeginBlendMode(BLEND_ADDITIVE);
+                scene_title_draw_world();
+                EndBlendMode();
+            }
         } else {
             draw_game_world(&gs);
         }

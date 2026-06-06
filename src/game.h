@@ -418,6 +418,7 @@ Vector2 bot_compute_direction(const GameState *gs);
 
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);
+void scene_title_draw_world(void);  // additive-blended background drifts
 void scene_weapon_select_update(GameState *gs, float dt);
 void scene_weapon_select_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);

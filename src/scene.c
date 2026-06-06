@@ -1,6 +1,212 @@
 #include "game.h"
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+// ===== Title background drift entities =====
+typedef enum {
+    DRIFT_ENEMY_CIRCLE,
+    DRIFT_ENEMY_RECT,
+    DRIFT_ENEMY_TRI,
+    DRIFT_GEM,
+    DRIFT_BULLET,
+    DRIFT_NOVA,
+} DriftType;
+
+typedef struct {
+    Vector2 pos;
+    Vector2 vel;
+    float radius;
+    float life;
+    float max_life;
+    DriftType type;
+    Color color;
+    bool active;
+} TitleDrift;
+
+#define TITLE_DRIFT_MAX 36
+static TitleDrift drifts[TITLE_DRIFT_MAX];
+static float drift_spawn_timer = 0;
+static bool drifts_initialized = false;
+
+static Color random_enemy_color(void) {
+    Color cands[] = {
+        {255, 50, 100, 255},
+        {255, 180, 60, 255},
+        {255, 120, 40, 255},
+        {220, 80, 180, 255},
+        {255, 80, 60, 255},
+        {255, 60, 140, 255},
+        {255, 100, 180, 255},
+        {200, 60, 60, 255},
+        {255, 90, 70, 255},
+    };
+    return cands[rand() % (int)(sizeof(cands) / sizeof(cands[0]))];
+}
+
+static void title_drift_init(void) {
+    for (int i = 0; i < TITLE_DRIFT_MAX; i++) drifts[i].active = false;
+    drift_spawn_timer = 0;
+    drifts_initialized = true;
+}
+
+static void spawn_drift(int sw, int sh) {
+    for (int i = 0; i < TITLE_DRIFT_MAX; i++) {
+        if (drifts[i].active) continue;
+        TitleDrift *d = &drifts[i];
+        d->active = true;
+
+        // Random edge entry
+        int side = rand() % 4;
+        switch (side) {
+            case 0: d->pos.x = rand() % sw; d->pos.y = -30; break;
+            case 1: d->pos.x = rand() % sw; d->pos.y = sh + 30; break;
+            case 2: d->pos.x = -30; d->pos.y = rand() % sh; break;
+            default: d->pos.x = sw + 30; d->pos.y = rand() % sh; break;
+        }
+
+        float angle = ((rand() % 360) / 180.0f) * 3.14159f;
+        float speed = 18.0f + (rand() % 30);
+        d->vel.x = cosf(angle) * speed;
+        d->vel.y = sinf(angle) * speed;
+        d->life = 8.0f + (rand() % 40) * 0.1f;
+        d->max_life = d->life;
+
+        int kind = rand() % 100;
+        if (kind < 50) {
+            int shape = rand() % 3;
+            d->type = (DriftType)(DRIFT_ENEMY_CIRCLE + shape);
+            d->radius = 8 + (rand() % 8);
+            d->color = random_enemy_color();
+        } else if (kind < 70) {
+            d->type = DRIFT_GEM;
+            d->radius = 6;
+            d->color = (Color){120, 255, 120, 255};
+        } else if (kind < 90) {
+            d->type = DRIFT_BULLET;
+            d->radius = 4;
+            d->color = (Color){255, 255, 100, 255};
+            float bspeed = 120 + (rand() % 60);
+            d->vel.x = cosf(angle) * bspeed;
+            d->vel.y = sinf(angle) * bspeed;
+            d->life = 4.0f;
+            d->max_life = 4.0f;
+        } else {
+            d->type = DRIFT_NOVA;
+            d->radius = 0;
+            d->pos.x = rand() % sw;
+            d->pos.y = rand() % sh;
+            d->vel.x = 0;
+            d->vel.y = 0;
+            d->color = (Color){100, 255, 255, 255};
+            d->life = 1.5f;
+            d->max_life = 1.5f;
+        }
+        return;
+    }
+}
+
+static void title_drift_update(float dt, int sw, int sh) {
+    if (!drifts_initialized) title_drift_init();
+
+    drift_spawn_timer -= dt;
+    if (drift_spawn_timer <= 0) {
+        drift_spawn_timer = 0.25f + (rand() % 30) * 0.01f;
+        spawn_drift(sw, sh);
+    }
+
+    for (int i = 0; i < TITLE_DRIFT_MAX; i++) {
+        if (!drifts[i].active) continue;
+        TitleDrift *d = &drifts[i];
+        d->pos.x += d->vel.x * dt;
+        d->pos.y += d->vel.y * dt;
+        d->life -= dt;
+        if (d->type == DRIFT_NOVA) {
+            d->radius += 120.0f * dt;
+        }
+        if (d->life <= 0 ||
+            d->pos.x < -50 || d->pos.x > sw + 50 ||
+            d->pos.y < -50 || d->pos.y > sh + 50) {
+            d->active = false;
+        }
+    }
+}
+
+static void title_drift_draw_internal(void);
+
+void scene_title_draw_world(void) {
+    title_drift_draw_internal();
+}
+
+static void title_drift_draw_internal(void) {
+    float t = (float)GetTime();
+    for (int i = 0; i < TITLE_DRIFT_MAX; i++) {
+        if (!drifts[i].active) continue;
+        const TitleDrift *d = &drifts[i];
+        float ratio = d->life / d->max_life;
+        float alpha = ratio;
+        if (ratio > 0.85f) alpha = (1.0f - ratio) / 0.15f;
+        if (alpha > 1) alpha = 1;
+        if (alpha < 0) alpha = 0;
+        Color c = d->color;
+        c.a = (unsigned char)(c.a * alpha * 0.55f);
+        Color inner = {255, 255, 255, (unsigned char)(255 * alpha * 0.3f)};
+
+        switch (d->type) {
+            case DRIFT_ENEMY_CIRCLE:
+                DrawCircleV(d->pos, d->radius, c);
+                DrawCircleV(d->pos, d->radius * 0.5f, inner);
+                break;
+            case DRIFT_ENEMY_RECT:
+                DrawRectangle((int)(d->pos.x - d->radius),
+                              (int)(d->pos.y - d->radius),
+                              (int)(d->radius * 2), (int)(d->radius * 2), c);
+                break;
+            case DRIFT_ENEMY_TRI: {
+                float a = atan2f(d->vel.y, d->vel.x);
+                Vector2 tip = {d->pos.x + cosf(a) * d->radius,
+                               d->pos.y + sinf(a) * d->radius};
+                Vector2 bl = {d->pos.x + cosf(a + 2.4f) * d->radius * 0.8f,
+                              d->pos.y + sinf(a + 2.4f) * d->radius * 0.8f};
+                Vector2 br = {d->pos.x + cosf(a - 2.4f) * d->radius * 0.8f,
+                              d->pos.y + sinf(a - 2.4f) * d->radius * 0.8f};
+                DrawTriangle(tip, bl, br, c);
+                DrawTriangle(tip, br, bl, c);
+                break;
+            }
+            case DRIFT_GEM: {
+                float pulse = 1.0f + 0.15f * sinf(t * 3.0f + i);
+                float rr = d->radius * pulse;
+                Vector2 top    = {d->pos.x, d->pos.y - rr * 1.2f};
+                Vector2 right  = {d->pos.x + rr * 0.9f, d->pos.y};
+                Vector2 bottom = {d->pos.x, d->pos.y + rr * 1.2f};
+                Vector2 left   = {d->pos.x - rr * 0.9f, d->pos.y};
+                DrawTriangle(top, left, right, c);
+                DrawTriangle(bottom, right, left, c);
+                break;
+            }
+            case DRIFT_BULLET: {
+                float vlen = sqrtf(d->vel.x * d->vel.x + d->vel.y * d->vel.y);
+                if (vlen < 0.01f) vlen = 1;
+                float dx = d->vel.x / vlen;
+                float dy = d->vel.y / vlen;
+                Vector2 head = {d->pos.x + dx * d->radius,
+                                d->pos.y + dy * d->radius};
+                Vector2 tail = {d->pos.x - dx * d->radius * 4.0f,
+                                d->pos.y - dy * d->radius * 4.0f};
+                DrawLineEx(tail, head, d->radius * 1.5f, c);
+                break;
+            }
+            case DRIFT_NOVA: {
+                if (d->radius > 0) {
+                    DrawRing(d->pos, d->radius - 3, d->radius + 3,
+                             0, 360, 36, c);
+                }
+                break;
+            }
+        }
+    }
+}
 
 typedef struct {
     const char *name;
@@ -29,6 +235,7 @@ static int find_difficulty_index(int value) {
 
 void scene_title_update(GameState *gs, float dt) {
     gs->scene_timer += dt;
+    title_drift_update(dt, GetScreenWidth(), GetScreenHeight());
 
     int idx = find_difficulty_index(gs->difficulty);
     if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
