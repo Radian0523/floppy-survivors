@@ -354,6 +354,7 @@ int main(int argc, char **argv) {
     gs.scene = SCENE_TITLE;
     gs.scene_timer = 0;
     gs.bot_mode = opt.bot;
+    gs.difficulty = DIFFICULTY;
     score_load(&gs.best);
     game_init(&gs);
 

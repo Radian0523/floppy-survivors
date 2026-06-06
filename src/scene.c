@@ -2,11 +2,47 @@
 #include <math.h>
 #include <stdio.h>
 
+typedef struct {
+    const char *name;
+    int value;
+    Color color;
+} DifficultyPreset;
+
+static const DifficultyPreset difficulties[] = {
+    {"EASY",   DIFFICULTY_EASY,   {120, 255, 180, 255}},
+    {"NORMAL", DIFFICULTY_NORMAL, {120, 200, 255, 255}},
+    {"HARD",   DIFFICULTY_HARD,   {255, 180, 100, 255}},
+    {"BRUTAL", DIFFICULTY_BRUTAL, {255, 100, 120, 255}},
+};
+#define DIFFICULTY_COUNT 4
+
+static int find_difficulty_index(int value) {
+    int best = 1;
+    int min_diff = 1000;
+    for (int i = 0; i < DIFFICULTY_COUNT; i++) {
+        int d = difficulties[i].value - value;
+        if (d < 0) d = -d;
+        if (d < min_diff) { min_diff = d; best = i; }
+    }
+    return best;
+}
+
 void scene_title_update(GameState *gs, float dt) {
     gs->scene_timer += dt;
 
+    int idx = find_difficulty_index(gs->difficulty);
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+        idx = (idx - 1 + DIFFICULTY_COUNT) % DIFFICULTY_COUNT;
+        gs->difficulty = difficulties[idx].value;
+    }
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+        idx = (idx + 1) % DIFFICULTY_COUNT;
+        gs->difficulty = difficulties[idx].value;
+    }
+
     if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER) ||
         IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        params_from_difficulty(&g_params, (float)gs->difficulty);
         gs->scene = SCENE_WEAPON_SELECT;
         gs->scene_timer = 0;
         gs->weapon_select_hover = 0;
@@ -36,12 +72,47 @@ void scene_title_draw(const GameState *gs) {
     DrawText(subtitle, (sw - sw_text) / 2, ty + title_size + 10, sub_size,
         (Color){180, 180, 200, 200});
 
+    // Difficulty selector
+    int idx = find_difficulty_index(gs->difficulty);
+    const char *diff_label = "DIFFICULTY";
+    int dl_size = 14;
+    int dl_w = MeasureText(diff_label, dl_size);
+    DrawText(diff_label, (sw - dl_w) / 2, sh / 2 + 30, dl_size,
+        (Color){160, 160, 180, 255});
+
+    int box_w = 80;
+    int gap = 12;
+    int total_w = DIFFICULTY_COUNT * box_w + (DIFFICULTY_COUNT - 1) * gap;
+    int start_x = (sw - total_w) / 2;
+    int box_y = sh / 2 + 50;
+    int box_h = 32;
+
+    for (int i = 0; i < DIFFICULTY_COUNT; i++) {
+        int x = start_x + i * (box_w + gap);
+        Color col = difficulties[i].color;
+        bool selected = (i == idx);
+        if (selected) {
+            DrawRectangle(x - 3, box_y - 3, box_w + 6, box_h + 6, col);
+        }
+        DrawRectangle(x, box_y, box_w, box_h, (Color){10, 15, 25, 230});
+        DrawRectangleLines(x, box_y, box_w, box_h, col);
+        const char *n = difficulties[i].name;
+        int nw = MeasureText(n, 14);
+        DrawText(n, x + (box_w - nw) / 2, box_y + 9, 14, col);
+    }
+
+    const char *diff_hint = "<- / -> or A / D to change";
+    int dh = 11;
+    int dhw = MeasureText(diff_hint, dh);
+    DrawText(diff_hint, (sw - dhw) / 2, box_y + box_h + 8, dh,
+        (Color){130, 130, 150, 200});
+
     float blink = sinf(gs->scene_timer * 3.0f);
     if (blink > -0.3f) {
         const char *prompt = "PRESS SPACE or CLICK to START";
-        int p_size = 20;
+        int p_size = 18;
         int pw = MeasureText(prompt, p_size);
-        DrawText(prompt, (sw - pw) / 2, sh / 2 + 60, p_size,
+        DrawText(prompt, (sw - pw) / 2, box_y + box_h + 32, p_size,
             (Color){100, 255, 255, 255});
     }
 

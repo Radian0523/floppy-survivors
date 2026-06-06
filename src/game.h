@@ -312,6 +312,7 @@ typedef struct {
     GameScene scene;
     float scene_timer;
     int weapon_select_hover;
+    int difficulty;
     bool paused;
 
     BestScore best;
