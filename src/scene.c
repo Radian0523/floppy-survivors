@@ -252,6 +252,12 @@ void scene_title_update(GameState *gs, float dt) {
         gs->scene_timer = 0;
         return;
     }
+    if (IsKeyPressed(KEY_S)) {
+        gs->scene = SCENE_SETTINGS;
+        gs->scene_timer = 0;
+        gs->settings_hover = 0;
+        return;
+    }
 
     if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER) ||
         IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -324,6 +330,137 @@ void scene_how_to_play_draw(const GameState *gs) {
     DrawText(back, (sw - bw) / 2, sh - 40, 14, (Color){150, 200, 220, 255});
 }
 
+// ============== SETTINGS ==============
+
+#define SETTINGS_ROW_COUNT 3
+#define SETTINGS_ROW_BGM 0
+#define SETTINGS_ROW_SFX 1
+#define SETTINGS_ROW_FS  2
+
+void scene_settings_update(GameState *gs, float dt) {
+    gs->scene_timer += dt;
+    title_drift_update(dt, GetScreenWidth(), GetScreenHeight());
+
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        settings_save(&gs->settings);
+        gs->scene = SCENE_TITLE;
+        gs->scene_timer = 0;
+        return;
+    }
+
+    if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
+        gs->settings_hover = (gs->settings_hover - 1 + SETTINGS_ROW_COUNT) % SETTINGS_ROW_COUNT;
+    }
+    if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
+        gs->settings_hover = (gs->settings_hover + 1) % SETTINGS_ROW_COUNT;
+    }
+
+    bool changed = false;
+    float step = 0.1f;
+    if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
+        if (gs->settings_hover == SETTINGS_ROW_BGM) {
+            gs->settings.bgm_volume -= step;
+            if (gs->settings.bgm_volume < 0) gs->settings.bgm_volume = 0;
+            changed = true;
+        } else if (gs->settings_hover == SETTINGS_ROW_SFX) {
+            gs->settings.sfx_volume -= step;
+            if (gs->settings.sfx_volume < 0) gs->settings.sfx_volume = 0;
+            changed = true;
+        } else if (gs->settings_hover == SETTINGS_ROW_FS) {
+            gs->settings.fullscreen = !gs->settings.fullscreen;
+            changed = true;
+        }
+    }
+    if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
+        if (gs->settings_hover == SETTINGS_ROW_BGM) {
+            gs->settings.bgm_volume += step;
+            if (gs->settings.bgm_volume > 1) gs->settings.bgm_volume = 1;
+            changed = true;
+        } else if (gs->settings_hover == SETTINGS_ROW_SFX) {
+            gs->settings.sfx_volume += step;
+            if (gs->settings.sfx_volume > 1) gs->settings.sfx_volume = 1;
+            changed = true;
+        } else if (gs->settings_hover == SETTINGS_ROW_FS) {
+            gs->settings.fullscreen = !gs->settings.fullscreen;
+            changed = true;
+        }
+    }
+    if ((IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)) &&
+        gs->settings_hover == SETTINGS_ROW_FS) {
+        gs->settings.fullscreen = !gs->settings.fullscreen;
+        changed = true;
+    }
+
+    if (changed) settings_apply(&gs->settings);
+}
+
+static void draw_setting_row(int x, int y, int w, const char *label,
+                              const char *value_text, float value_ratio,
+                              bool selected) {
+    Color c_label = selected ? (Color){255, 255, 255, 255}
+                              : (Color){180, 180, 200, 255};
+    Color c_val   = selected ? (Color){100, 255, 255, 255}
+                              : (Color){180, 200, 220, 255};
+    Color c_bg    = selected ? (Color){25, 30, 50, 230}
+                              : (Color){15, 18, 28, 200};
+    Color c_border = selected ? (Color){100, 255, 255, 255}
+                               : (Color){60, 80, 100, 200};
+
+    int h = 40;
+    DrawRectangle(x, y, w, h, c_bg);
+    DrawRectangleLines(x, y, w, h, c_border);
+    DrawText(label, x + 16, y + 12, 16, c_label);
+
+    int bar_x = x + 220;
+    int bar_w = w - 240;
+    if (value_ratio >= 0) {
+        int bar_y = y + h / 2 - 4;
+        int bh = 8;
+        DrawRectangle(bar_x, bar_y, bar_w, bh, (Color){30, 30, 50, 255});
+        DrawRectangle(bar_x, bar_y, (int)(bar_w * value_ratio), bh, c_val);
+    }
+    DrawText(value_text, bar_x + bar_w + 12, y + 12, 16, c_val);
+}
+
+void scene_settings_draw(const GameState *gs) {
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 10, 180});
+
+    const char *title = "SETTINGS";
+    int ts = 36;
+    int tw = MeasureText(title, ts);
+    DrawText(title, (sw - tw) / 2, 60, ts, (Color){100, 255, 255, 255});
+
+    int row_w = 520;
+    int row_x = (sw - row_w) / 2;
+    int row_y = 150;
+    int row_gap = 12;
+
+    char buf[32];
+    float bgm = gs->settings.bgm_volume;
+    float sfx = gs->settings.sfx_volume;
+
+    snprintf(buf, sizeof(buf), "%d%%", (int)(bgm * 100 + 0.5f));
+    draw_setting_row(row_x, row_y, row_w, "BGM VOLUME", buf, bgm,
+                     gs->settings_hover == SETTINGS_ROW_BGM);
+    row_y += 40 + row_gap;
+
+    snprintf(buf, sizeof(buf), "%d%%", (int)(sfx * 100 + 0.5f));
+    draw_setting_row(row_x, row_y, row_w, "SFX VOLUME", buf, sfx,
+                     gs->settings_hover == SETTINGS_ROW_SFX);
+    row_y += 40 + row_gap;
+
+    const char *fs_val = gs->settings.fullscreen ? "ON" : "OFF";
+    draw_setting_row(row_x, row_y, row_w, "FULLSCREEN", fs_val, -1.0f,
+                     gs->settings_hover == SETTINGS_ROW_FS);
+
+    const char *hint = "Up/Down: row  -  Left/Right: change  -  ESC: save & back";
+    int hw = MeasureText(hint, 14);
+    DrawText(hint, (sw - hw) / 2, sh - 60, 14, (Color){150, 200, 220, 255});
+}
+
 void scene_title_draw(const GameState *gs) {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
@@ -391,7 +528,7 @@ void scene_title_draw(const GameState *gs) {
             (Color){100, 255, 255, 255});
     }
 
-    const char *controls = "WASD/Arrows: Move  -  H: How to Play";
+    const char *controls = "H: How to Play  -  S: Settings";
     int c_size = 14;
     int cw = MeasureText(controls, c_size);
     DrawText(controls, (sw - cw) / 2, sh - 60, c_size, (Color){150, 150, 170, 200});

@@ -232,3 +232,10 @@ void audio_cleanup(void) {
     CloseAudioDevice();
     audio_ready = false;
 }
+
+void audio_set_sfx_volume(float v) {
+    if (!audio_ready) return;
+    if (v < 0) v = 0;
+    if (v > 1) v = 1;
+    for (int i = 0; i < SFX_COUNT; i++) SetSoundVolume(sfx[i], v);
+}

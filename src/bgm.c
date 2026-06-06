@@ -154,3 +154,10 @@ void bgm_cleanup(void) {
     UnloadAudioStream(stream);
     stream_ready = false;
 }
+
+void bgm_set_volume(float v) {
+    if (!stream_ready) return;
+    if (v < 0) v = 0;
+    if (v > 1) v = 1;
+    SetAudioStreamVolume(stream, v);
+}

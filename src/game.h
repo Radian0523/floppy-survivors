@@ -9,10 +9,17 @@
 typedef enum {
     SCENE_TITLE,
     SCENE_HOW_TO_PLAY,
+    SCENE_SETTINGS,
     SCENE_WEAPON_SELECT,
     SCENE_GAME,
     SCENE_RESULT
 } GameScene;
+
+typedef struct {
+    float sfx_volume;   // 0.0 - 1.0
+    float bgm_volume;
+    bool fullscreen;
+} Settings;
 
 typedef enum {
     STARTING_WEAPON_PULSE,
@@ -315,6 +322,8 @@ typedef struct {
     int weapon_select_hover;
     int difficulty;
     bool paused;
+    Settings settings;
+    int settings_hover;
 
     BestScore best;
     int last_score_flags;
@@ -422,6 +431,14 @@ void scene_title_draw(const GameState *gs);
 void scene_title_draw_world(void);  // additive-blended background drifts
 void scene_how_to_play_update(GameState *gs, float dt);
 void scene_how_to_play_draw(const GameState *gs);
+void scene_settings_update(GameState *gs, float dt);
+void scene_settings_draw(const GameState *gs);
+
+void settings_load(Settings *s);
+void settings_save(const Settings *s);
+void settings_apply(const Settings *s);
+void audio_set_sfx_volume(float v);
+void bgm_set_volume(float v);
 void scene_weapon_select_update(GameState *gs, float dt);
 void scene_weapon_select_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);

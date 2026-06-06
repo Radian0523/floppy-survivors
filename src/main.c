@@ -355,6 +355,8 @@ int main(int argc, char **argv) {
     gs.scene_timer = 0;
     gs.bot_mode = opt.bot;
     gs.difficulty = DIFFICULTY;
+    settings_load(&gs.settings);
+    settings_apply(&gs.settings);
     score_load(&gs.best);
     game_init(&gs);
 
@@ -370,6 +372,10 @@ int main(int argc, char **argv) {
             case SCENE_HOW_TO_PLAY:
                 bgm_play(BGM_TITLE);
                 scene_how_to_play_update(&gs, dt);
+                break;
+            case SCENE_SETTINGS:
+                bgm_play(BGM_TITLE);
+                scene_settings_update(&gs, dt);
                 break;
             case SCENE_WEAPON_SELECT:
                 bgm_play(BGM_TITLE);
@@ -387,9 +393,10 @@ int main(int argc, char **argv) {
 
         BeginTextureMode(target);
         if (gs.scene == SCENE_TITLE || gs.scene == SCENE_WEAPON_SELECT ||
-            gs.scene == SCENE_HOW_TO_PLAY) {
+            gs.scene == SCENE_HOW_TO_PLAY || gs.scene == SCENE_SETTINGS) {
             render_background();
-            if (gs.scene == SCENE_TITLE || gs.scene == SCENE_HOW_TO_PLAY) {
+            if (gs.scene == SCENE_TITLE || gs.scene == SCENE_HOW_TO_PLAY ||
+                gs.scene == SCENE_SETTINGS) {
                 BeginBlendMode(BLEND_ADDITIVE);
                 scene_title_draw_world();
                 EndBlendMode();
@@ -414,6 +421,9 @@ int main(int argc, char **argv) {
                 break;
             case SCENE_HOW_TO_PLAY:
                 scene_how_to_play_draw(&gs);
+                break;
+            case SCENE_SETTINGS:
+                scene_settings_draw(&gs);
                 break;
             case SCENE_WEAPON_SELECT:
                 scene_weapon_select_draw(&gs);
