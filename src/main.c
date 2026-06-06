@@ -367,6 +367,10 @@ int main(int argc, char **argv) {
                 bgm_play(BGM_TITLE);
                 scene_title_update(&gs, dt);
                 break;
+            case SCENE_HOW_TO_PLAY:
+                bgm_play(BGM_TITLE);
+                scene_how_to_play_update(&gs, dt);
+                break;
             case SCENE_WEAPON_SELECT:
                 bgm_play(BGM_TITLE);
                 scene_weapon_select_update(&gs, dt);
@@ -382,9 +386,10 @@ int main(int argc, char **argv) {
         }
 
         BeginTextureMode(target);
-        if (gs.scene == SCENE_TITLE || gs.scene == SCENE_WEAPON_SELECT) {
+        if (gs.scene == SCENE_TITLE || gs.scene == SCENE_WEAPON_SELECT ||
+            gs.scene == SCENE_HOW_TO_PLAY) {
             render_background();
-            if (gs.scene == SCENE_TITLE) {
+            if (gs.scene == SCENE_TITLE || gs.scene == SCENE_HOW_TO_PLAY) {
                 BeginBlendMode(BLEND_ADDITIVE);
                 scene_title_draw_world();
                 EndBlendMode();
@@ -406,6 +411,9 @@ int main(int argc, char **argv) {
         switch (gs.scene) {
             case SCENE_TITLE:
                 scene_title_draw(&gs);
+                break;
+            case SCENE_HOW_TO_PLAY:
+                scene_how_to_play_draw(&gs);
                 break;
             case SCENE_WEAPON_SELECT:
                 scene_weapon_select_draw(&gs);

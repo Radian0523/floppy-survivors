@@ -8,6 +8,7 @@
 
 typedef enum {
     SCENE_TITLE,
+    SCENE_HOW_TO_PLAY,
     SCENE_WEAPON_SELECT,
     SCENE_GAME,
     SCENE_RESULT
@@ -419,6 +420,8 @@ Vector2 bot_compute_direction(const GameState *gs);
 void scene_title_update(GameState *gs, float dt);
 void scene_title_draw(const GameState *gs);
 void scene_title_draw_world(void);  // additive-blended background drifts
+void scene_how_to_play_update(GameState *gs, float dt);
+void scene_how_to_play_draw(const GameState *gs);
 void scene_weapon_select_update(GameState *gs, float dt);
 void scene_weapon_select_draw(const GameState *gs);
 void scene_result_update(GameState *gs, float dt);

@@ -247,6 +247,12 @@ void scene_title_update(GameState *gs, float dt) {
         gs->difficulty = difficulties[idx].value;
     }
 
+    if (IsKeyPressed(KEY_H)) {
+        gs->scene = SCENE_HOW_TO_PLAY;
+        gs->scene_timer = 0;
+        return;
+    }
+
     if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER) ||
         IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
         params_from_difficulty(&g_params, (float)gs->difficulty);
@@ -254,6 +260,68 @@ void scene_title_update(GameState *gs, float dt) {
         gs->scene_timer = 0;
         gs->weapon_select_hover = 0;
     }
+}
+
+// ============== HOW TO PLAY ==============
+
+void scene_how_to_play_update(GameState *gs, float dt) {
+    gs->scene_timer += dt;
+    title_drift_update(dt, GetScreenWidth(), GetScreenHeight());
+
+    if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_H) ||
+        IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER) ||
+        IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        gs->scene = SCENE_TITLE;
+        gs->scene_timer = 0;
+    }
+}
+
+void scene_how_to_play_draw(const GameState *gs) {
+    (void)gs;
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 10, 180});
+
+    const char *title = "HOW TO PLAY";
+    int ts = 36;
+    int tw = MeasureText(title, ts);
+    DrawText(title, (sw - tw) / 2, 40, ts, (Color){100, 255, 255, 255});
+
+    int left = sw / 2 - 280;
+    int y = 110;
+    int line = 22;
+
+    Color section = {255, 230, 100, 255};
+    Color label   = {220, 220, 240, 255};
+    Color val     = {180, 200, 220, 255};
+    Color accent_e = {255, 100, 120, 255};   // enemy
+    Color accent_f = {120, 255, 180, 255};   // friendly
+
+    DrawText("CONTROLS", left, y, 18, section); y += line + 2;
+    DrawText("  Move:        WASD / Arrow keys / Mouse hold", left, y, 16, label); y += line;
+    DrawText("  Confirm:     SPACE / Enter / Click", left, y, 16, label); y += line;
+    DrawText("  Pause:       ESC  (during game)", left, y, 16, label); y += line;
+    DrawText("  Debug:       TAB  (during game)", left, y, 16, val); y += line + 8;
+
+    DrawText("OBJECTIVE", left, y, 18, section); y += line + 2;
+    DrawText("  Survive 5 minutes against corrupted data.", left, y, 16, label); y += line;
+    DrawText("  Weapons fire automatically. You only move.", left, y, 16, label); y += line + 8;
+
+    DrawText("GAMEPLAY", left, y, 18, section); y += line + 2;
+    DrawText("  - Collect green GEMS for XP", left, y, 16, accent_f); y += line;
+    DrawText("  - LEVEL UP to choose an upgrade or new weapon", left, y, 16, label); y += line;
+    DrawText("  - Defeat ELITES (with crowns) for treasure CHESTS", left, y, 16, accent_e); y += line;
+    DrawText("  - Open chests for guaranteed upgrades", left, y, 16, label); y += line;
+    DrawText("  - Survive the FORMAT boss at 4:00", left, y, 16, accent_e); y += line + 8;
+
+    DrawText("ITEMS", left, y, 18, section); y += line + 2;
+    DrawText("  HP cross   - restore 2 HP", left, y, 16, accent_f); y += line;
+    DrawText("  Big gem    - magnet, pulls all gems to you", left, y, 16, accent_f); y += line;
+
+    const char *back = "Press ESC / SPACE / H to return to title";
+    int bw = MeasureText(back, 14);
+    DrawText(back, (sw - bw) / 2, sh - 40, 14, (Color){150, 200, 220, 255});
 }
 
 void scene_title_draw(const GameState *gs) {
@@ -323,7 +391,7 @@ void scene_title_draw(const GameState *gs) {
             (Color){100, 255, 255, 255});
     }
 
-    const char *controls = "WASD/Arrows: Move  -  Mouse: Direction  -  Auto-attack";
+    const char *controls = "WASD/Arrows: Move  -  H: How to Play";
     int c_size = 14;
     int cw = MeasureText(controls, c_size);
     DrawText(controls, (sw - cw) / 2, sh - 60, c_size, (Color){150, 150, 170, 200});
