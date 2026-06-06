@@ -233,6 +233,12 @@ static void spawn_elite(GameState *gs) {
     }
 }
 
+void enemy_spawn_elite_force(GameState *gs) {
+    spawn_elite(gs);
+}
+
+void enemy_spawn_formation_force(GameState *gs);
+
 static void spawn_formation(GameState *gs) {
     int kind = rand() % 2;
     float time_bonus = gs->game_time / GAME_DURATION * ENEMY_SPEED_TIME_BONUS;
@@ -382,6 +388,10 @@ static void update_one_enemy(GameState *gs, Enemy *e, float dt) {
     if (dist < PLAYER_RADIUS + e->radius) {
         player_take_damage(gs, ENEMY_DAMAGE);
     }
+}
+
+void enemy_spawn_formation_force(GameState *gs) {
+    spawn_formation(gs);
 }
 
 void enemy_update(GameState *gs, float dt) {

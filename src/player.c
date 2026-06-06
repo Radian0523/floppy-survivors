@@ -46,6 +46,7 @@ void player_update(Player *p, float dt, float scale) {
 
 void player_take_damage(GameState *gs, int damage) {
     Player *p = &gs->player;
+    if (gs->debug_invincible) return;
     if (p->invincible_timer > 0) return;
     p->hp -= damage;
     if (p->hp < 0) p->hp = 0;

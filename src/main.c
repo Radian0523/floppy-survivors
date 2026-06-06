@@ -129,6 +129,8 @@ static void draw_hud(const GameState *gs) {
 }
 
 static void update_game(GameState *gs, float dt) {
+    debug_update(gs);
+
     if (gs->paused) {
         if (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_SPACE)) {
             gs->paused = false;
@@ -318,6 +320,7 @@ int main(void) {
                 draw_hud(&gs);
                 if (gs.upgrading) upgrade_draw(&gs);
                 if (gs.paused) pause_draw(&gs);
+                debug_draw(&gs);
                 break;
             case SCENE_RESULT:
                 draw_hud(&gs);

@@ -316,6 +316,9 @@ typedef struct {
     BestScore best;
     int last_score_flags;
 
+    bool debug_open;
+    bool debug_invincible;
+
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
     int upgrade_hover;
@@ -378,6 +381,11 @@ void enemy_bullets_draw(const GameState *gs, float scale, Vector2 offset);
 void items_init(GameState *gs);
 void item_drop_roll(GameState *gs, EnemyType type, Vector2 pos);
 void chest_drop(GameState *gs, Vector2 pos);
+void enemy_spawn_elite_force(GameState *gs);
+void enemy_spawn_formation_force(GameState *gs);
+
+void debug_update(GameState *gs);
+void debug_draw(const GameState *gs);
 void items_update(GameState *gs, float dt);
 void items_draw(const GameState *gs, float scale, Vector2 offset);
 void chests_update(GameState *gs, float dt);
