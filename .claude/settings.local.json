@@ -29,7 +29,8 @@
       "Bash(./disk_survivor --headless --bot --seed=42 --params=enemy_hp_mult=2.0,enemy_spawn_min_mult=0.5 --output=/tmp/hard.txt)",
       "Bash(python3 *)",
       "Bash(pip3 install *)",
-      "Bash(./disk_survivor --bot)"
+      "Bash(./disk_survivor --bot)",
+      "Bash(gh issue *)"
     ]
   }
 }

@@ -2,6 +2,14 @@
 #include <math.h>
 
 void gem_spawn(GameState *gs, Vector2 pos) {
+    // Clamp inside the play area so the player can always reach it.
+    // (Enemies can die outside the bounds; gems spawned there would be lost.)
+    float margin = GEM_RADIUS + 2.0f;
+    if (pos.x < margin) pos.x = margin;
+    if (pos.x > LOGICAL_W - margin) pos.x = LOGICAL_W - margin;
+    if (pos.y < margin) pos.y = margin;
+    if (pos.y > LOGICAL_H - margin) pos.y = LOGICAL_H - margin;
+
     for (int i = 0; i < MAX_GEMS; i++) {
         if (!gs->gems[i].active) {
             gs->gems[i].active = true;
