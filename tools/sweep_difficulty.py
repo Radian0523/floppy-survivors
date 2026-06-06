@@ -15,22 +15,25 @@ sys.path.insert(0, str(Path(__file__).parent))
 from runner import run_batch, summarize
 
 # Difficulty curve (mirrors params_from_difficulty in C).
-def pivot(d: float, lo: float, hi: float) -> float:
-    if d <= 50:
-        return lo + (1.0 - lo) * (d / 50.0)
-    return 1.0 + (hi - 1.0) * ((d - 50.0) / 50.0)
+def lerp(d: float, lo: float, hi: float) -> float:
+    t = d / 100.0
+    if t < 0:
+        t = 0
+    if t > 1:
+        t = 1
+    return lo + (hi - lo) * t
 
 
 def params_for_difficulty(d: float) -> str:
     return ",".join([
-        f"enemy_hp_mult={pivot(d, 0.55, 1.70):.4f}",
-        f"enemy_spawn_min_mult={pivot(d, 1.80, 0.65):.4f}",
-        f"enemy_speed_bonus_mult={pivot(d, 0.50, 1.50):.4f}",
-        f"enemy_damage_mult={pivot(d, 0.70, 1.40):.4f}",
-        f"spawn_count_mult={pivot(d, 0.60, 1.45):.4f}",
-        f"player_speed_mult={pivot(d, 1.25, 0.88):.4f}",
-        f"player_hp_mult={pivot(d, 1.80, 0.80):.4f}",
-        f"player_invincible_mult={pivot(d, 1.40, 0.82):.4f}",
+        f"enemy_hp_mult={lerp(d, 0.85, 1.75):.4f}",
+        f"enemy_spawn_min_mult={lerp(d, 1.30, 0.55):.4f}",
+        f"enemy_speed_bonus_mult={lerp(d, 0.60, 1.45):.4f}",
+        f"enemy_damage_mult={lerp(d, 0.90, 1.50):.4f}",
+        f"spawn_count_mult={lerp(d, 0.85, 1.55):.4f}",
+        f"player_speed_mult={lerp(d, 1.18, 0.92):.4f}",
+        f"player_hp_mult={lerp(d, 1.30, 0.80):.4f}",
+        f"player_invincible_mult={lerp(d, 1.25, 0.85):.4f}",
     ])
 
 

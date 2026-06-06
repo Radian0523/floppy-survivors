@@ -17,30 +17,27 @@ void params_defaults(ParamSet *p) {
 }
 
 static float lerp(float a, float b, float t) {
+    if (t < 0) t = 0;
+    if (t > 1) t = 1;
     return a + (b - a) * t;
-}
-
-// Pivot curve: d=0 -> min_v, d=50 -> 1.0, d=100 -> max_v.
-static float pivot(float d, float min_v, float max_v) {
-    if (d <= 50.0f) return lerp(min_v, 1.0f, d / 50.0f);
-    return lerp(1.0f, max_v, (d - 50.0f) / 50.0f);
 }
 
 void params_from_difficulty(ParamSet *p, float difficulty) {
     if (difficulty < 0) difficulty = 0;
     if (difficulty > 100) difficulty = 100;
+    float d = difficulty / 100.0f;
 
-    // d=50 -> all 1.0 (vanilla). d=0 -> player-favored. d=100 -> challenging.
-    // Compounding effect: small per-multiplier shifts combine into large
-    // overall changes. Keep each axis modest.
-    p->enemy_hp_mult          = pivot(difficulty, 0.55f, 1.70f);
-    p->enemy_spawn_min_mult   = pivot(difficulty, 1.80f, 0.65f);
-    p->enemy_speed_bonus_mult = pivot(difficulty, 0.50f, 1.50f);
-    p->enemy_damage_mult      = pivot(difficulty, 0.70f, 1.40f);
-    p->spawn_count_mult       = pivot(difficulty, 0.60f, 1.45f);
-    p->player_speed_mult      = pivot(difficulty, 1.25f, 0.88f);
-    p->player_hp_mult         = pivot(difficulty, 1.80f, 0.80f);
-    p->player_invincible_mult = pivot(difficulty, 1.40f, 0.82f);
+    // Linear curve, bounds tuned so the bot dies at roughly the right
+    // pace per preset. Note: the bot evades well, so the curve leans
+    // enemy-side overall; mid-d (NORMAL) is already a meaningful fight.
+    p->enemy_hp_mult          = lerp(0.85f, 1.75f, d);
+    p->enemy_spawn_min_mult   = lerp(1.30f, 0.55f, d);  // smaller=denser
+    p->enemy_speed_bonus_mult = lerp(0.60f, 1.45f, d);
+    p->enemy_damage_mult      = lerp(0.90f, 1.50f, d);
+    p->spawn_count_mult       = lerp(0.85f, 1.55f, d);
+    p->player_speed_mult      = lerp(1.18f, 0.92f, d);
+    p->player_hp_mult         = lerp(1.30f, 0.80f, d);
+    p->player_invincible_mult = lerp(1.25f, 0.85f, d);
 }
 
 static bool set_param(ParamSet *p, const char *key, float val) {

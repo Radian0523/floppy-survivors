@@ -1,0 +1,26 @@
+{
+  "target": 40.0,
+  "params": {
+    "enemy_hp_mult": 1.5248238753207952,
+    "enemy_spawn_min_mult": 0.4868263148714439,
+    "enemy_speed_bonus_mult": 1.464144932564122,
+    "enemy_damage_mult": 0.5044397948551983,
+    "spawn_count_mult": 3.0,
+    "player_speed_mult": 1.6,
+    "player_hp_mult": 2.0,
+    "player_invincible_mult": 2.0
+  },
+  "verification": {
+    "runs": 30,
+    "duration_mean": 63.69183333333333,
+    "duration_median": 37.456,
+    "duration_min": 29.04,
+    "duration_max": 300.003,
+    "duration_p25": 35.146,
+    "duration_p75": 41.053,
+    "kills_mean": 725.2666666666667,
+    "level_mean": 12.9,
+    "win_rate": 0.1,
+    "boss_kill_rate": 0.1
+  }
+}

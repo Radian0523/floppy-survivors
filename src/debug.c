@@ -19,6 +19,7 @@ static const DebugAction actions[] = {
     {KEY_C,             "C   : drop chest at player"},
     {KEY_M,             "M   : drop magnet at player"},
     {KEY_J,             "J   : drop HP item at player"},
+    {KEY_P,             "P   : toggle auto-play (bot)"},
 };
 
 void debug_update(GameState *gs) {
@@ -80,6 +81,9 @@ void debug_update(GameState *gs) {
             }
         }
     }
+    if (IsKeyPressed(KEY_P)) {
+        gs->bot_mode = !gs->bot_mode;
+    }
 }
 
 void debug_draw(const GameState *gs) {
@@ -105,9 +109,10 @@ void debug_draw(const GameState *gs) {
     for (int i = 0; i < MAX_ENEMIES; i++) if (gs->enemies[i].active) active++;
     int mins = (int)gs->game_time / 60;
     int secs = (int)gs->game_time % 60;
-    sprintf(info, "T %d:%02d  E %d  FPS %d  INV %s",
+    sprintf(info, "T %d:%02d  E %d  FPS %d  INV %s  BOT %s",
         mins, secs, active, GetFPS(),
-        gs->debug_invincible ? "ON" : "off");
+        gs->debug_invincible ? "ON" : "off",
+        gs->bot_mode ? "ON" : "off");
     DrawText(info, x + pad, y + pad + 22, 12, (Color){200, 220, 240, 255});
 
     int row_y = y + pad + 50;
