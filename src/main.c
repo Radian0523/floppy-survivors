@@ -42,21 +42,25 @@ static void game_init(GameState *gs) {
     gs->level = 1;
     gs->xp_to_next = XP_BASE_REQUIREMENT;
 
-    gs->has_pulse_bolt = false;
-    gs->fire_timer = 0;
-    gs->fire_interval = WEAPON_FIRE_INTERVAL;
-    gs->bullet_count = 1;
-    gs->bullet_damage = BULLET_DAMAGE;
+    gs->weapon_rate_mult = 1.0f;
+    gs->weapon_damage_bonus = 0;
+    gs->weapon_extra_projectiles = 0;
 
-    gs->has_orbiters = false;
-    gs->orbiter_count = 0;
-    gs->has_beam = false;
-    gs->has_nova = false;
-    gs->has_mines = false;
-    gs->has_chain = false;
-    gs->has_boomerang = false;
-    gs->has_trail = false;
-    gs->has_whip = false;
+    gs->pulse.has = false;
+    gs->pulse.fire_timer = 0;
+    gs->pulse.fire_interval = WEAPON_FIRE_INTERVAL;
+    gs->pulse.bullet_count = 1;
+    gs->pulse.damage = BULLET_DAMAGE;
+
+    gs->orbiters.has = false;
+    gs->orbiters.count = 0;
+    gs->beam.has = false;
+    gs->nova.has = false;
+    gs->mines.has = false;
+    gs->chain.has = false;
+    gs->boomerang.has = false;
+    gs->trail.has = false;
+    gs->whip.has = false;
 
     gs->spawn_timer = 1.0f;
     gs->spawn_interval = SPAWN_INTERVAL_INITIAL;
@@ -85,7 +89,7 @@ void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
     game_init(gs);
     switch (weapon) {
         case STARTING_WEAPON_PULSE:
-            gs->has_pulse_bolt = true;
+            gs->pulse.has = true;
             break;
         case STARTING_WEAPON_ORBITERS:
             orbiters_init(gs);
@@ -97,7 +101,7 @@ void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
             nova_init(gs);
             break;
         default:
-            gs->has_pulse_bolt = true;
+            gs->pulse.has = true;
             break;
     }
 }
@@ -270,7 +274,7 @@ static int run_headless(const CliOptions *opt) {
     gs.headless = true;
     score_load(&gs.best);
     game_init(&gs);
-    gs.has_pulse_bolt = true;
+    gs.pulse.has = true;
 
     float dt = 0.033f;
     float max_dur = opt->duration_set ? opt->duration_override : GAME_DURATION;

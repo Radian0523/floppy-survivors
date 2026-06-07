@@ -6,10 +6,13 @@ CFLAGS = -std=c99 -Os -flto -Wall -Wextra -ffunction-sections -fdata-sections \
          -fno-asynchronous-unwind-tables -fno-ident
 LDFLAGS = -flto
 
-SRCS = src/main.c src/player.c src/weapon.c src/enemy.c src/gem.c src/render.c \
+SRCS = src/main.c src/player.c src/enemy.c src/gem.c src/render.c \
        src/input.c src/upgrade.c src/boss.c src/scene.c src/audio.c src/particle.c \
-       src/bgm.c src/weapon_extra.c src/score.c src/item.c src/debug.c \
-       src/params.c src/bot.c src/settings.c
+       src/bgm.c src/score.c src/item.c src/debug.c \
+       src/params.c src/bot.c src/settings.c src/weapon_util.c \
+       src/weapons/pulse.c src/weapons/orbiters.c src/weapons/beam.c \
+       src/weapons/nova.c src/weapons/mines.c src/weapons/chain.c \
+       src/weapons/boomerang.c src/weapons/trail.c src/weapons/whip.c
 TARGET = disk_survivor
 
 # Size limit (1.44 MB floppy)

@@ -75,24 +75,11 @@ typedef struct {
     bool active;
 } Bullet;
 
+// === Per-slot types ===
 typedef struct {
     float angle;
     bool active;
 } Orbiter;
-
-typedef struct {
-    float angle;
-    float center_angle;
-    float timer;
-    bool firing;
-    float fire_timer;
-} BeamState;
-
-typedef struct {
-    float timer;
-    float current_radius;
-    bool expanding;
-} NovaState;
 
 typedef struct {
     Vector2 pos;
@@ -119,6 +106,86 @@ typedef struct {
     float life;
     bool active;
 } TrailMark;
+
+// === Weapon containers ===
+typedef struct {
+    bool has;
+    float fire_timer;
+    float fire_interval;
+    int bullet_count;
+    int damage;
+} PulseWeapon;
+
+typedef struct {
+    bool has;
+    Orbiter slots[MAX_ORBITERS];
+    int count;
+    int damage;
+    float orbit_radius;
+} OrbitersWeapon;
+
+typedef struct {
+    bool has;
+    float angle;
+    float center_angle;
+    float timer;
+    bool firing;
+    float fire_timer;
+    float interval;
+    int damage;
+    float length;
+    float width;
+} BeamWeapon;
+
+typedef struct {
+    bool has;
+    float timer;
+    float current_radius;
+    bool expanding;
+    float interval;
+    int damage;
+    float max_radius;
+} NovaWeapon;
+
+typedef struct {
+    bool has;
+    Mine slots[MAX_MINES];
+    float timer;
+    float interval;
+    int damage;
+} MinesWeapon;
+
+typedef struct {
+    bool has;
+    float timer;
+    float interval;
+    int jumps;
+    int damage;
+    ChainVisual visual;
+} ChainWeapon;
+
+typedef struct {
+    bool has;
+    BoomerangProj slots[MAX_BOOMERANGS];
+    float timer;
+    float interval;
+    int damage;
+} BoomerangWeapon;
+
+typedef struct {
+    bool has;
+    TrailMark slots[MAX_TRAIL_MARKS];
+    float timer;
+    int damage;
+} TrailWeapon;
+
+typedef struct {
+    bool has;
+    float timer;
+    float anim;
+    float interval;
+    int damage;
+} WhipWeapon;
 
 typedef enum {
     ENEMY_BIT,
@@ -237,69 +304,21 @@ typedef struct {
     int level;
     int xp_to_next;
 
-    // Pulse Bolt
-    bool has_pulse_bolt;
-    float fire_timer;
-    float fire_interval;
-    int bullet_count;
-    int bullet_damage;
+    // Global weapon modifiers (apply to ALL owned weapons)
+    float weapon_rate_mult;        // RAPID FIRE: multiplies every weapon interval
+    int weapon_damage_bonus;       // POWER: added to every weapon damage
+    int weapon_extra_projectiles;  // MULTI SHOT: extra projectiles for projectile weapons
 
-    // Orbiters
-    bool has_orbiters;
-    Orbiter orbiters[MAX_ORBITERS];
-    int orbiter_count;
-    int orbiter_damage;
-    float orbiter_orbit_radius;
-
-    // Beam
-    bool has_beam;
-    BeamState beam;
-    float beam_interval;
-    int beam_damage;
-    float beam_length;
-    float beam_width;
-
-    // Nova
-    bool has_nova;
-    NovaState nova;
-    float nova_interval;
-    int nova_damage;
-    float nova_max_radius;
-
-    // Spark Mines
-    bool has_mines;
-    Mine mines[MAX_MINES];
-    float mine_timer;
-    float mine_interval;
-    int mine_damage;
-
-    // Chain Lightning
-    bool has_chain;
-    float chain_timer;
-    float chain_interval;
-    int chain_jumps;
-    int chain_damage;
-    ChainVisual chain_visual;
-
-    // Boomerang
-    bool has_boomerang;
-    BoomerangProj boomerangs[MAX_BOOMERANGS];
-    float boomerang_timer;
-    float boomerang_interval;
-    int boomerang_damage;
-
-    // Trail
-    bool has_trail;
-    TrailMark trail[MAX_TRAIL_MARKS];
-    float trail_timer;
-    int trail_damage;
-
-    // Whip
-    bool has_whip;
-    float whip_timer;
-    float whip_anim;
-    float whip_interval;
-    int whip_damage;
+    // Weapons (each in its own container struct)
+    PulseWeapon pulse;
+    OrbitersWeapon orbiters;
+    BeamWeapon beam;
+    NovaWeapon nova;
+    MinesWeapon mines;
+    ChainWeapon chain;
+    BoomerangWeapon boomerang;
+    TrailWeapon trail;
+    WhipWeapon whip;
 
     float spawn_timer;
     float spawn_interval;
