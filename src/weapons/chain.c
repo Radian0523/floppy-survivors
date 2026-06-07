@@ -25,7 +25,7 @@ void chain_update(GameState *gs, float dt) {
     if (first < 0) return;
 
     gs->chain.visual.count = 0;
-    gs->chain.visual.life = CHAIN_VISUAL_LIFE;
+    gs->chain.visual.life = CHAIN_VISUAL_LIFE * gs->weapon_duration_mult;
     gs->chain.visual.points[gs->chain.visual.count++] = gs->player.pos;
 
     bool hit[MAX_ENEMIES] = {false};
@@ -61,7 +61,8 @@ void chain_update(GameState *gs, float dt) {
 
 void chain_draw(const GameState *gs, float scale, Vector2 offset) {
     if (!gs->chain.has || gs->chain.visual.life <= 0) return;
-    float alpha = gs->chain.visual.life / CHAIN_VISUAL_LIFE;
+    float life_max = CHAIN_VISUAL_LIFE * gs->weapon_duration_mult;
+    float alpha = (life_max > 0) ? gs->chain.visual.life / life_max : 0;
     Color col = {200, 240, 255, (unsigned char)(255 * alpha)};
     Color col_inner = {255, 255, 255, (unsigned char)(255 * alpha)};
 

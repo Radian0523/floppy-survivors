@@ -37,6 +37,8 @@ typedef enum {
     UPGRADE_SPEED,
     UPGRADE_MAGNET,
     UPGRADE_VITALITY,
+    UPGRADE_AREA,
+    UPGRADE_DURATION,
     // Weapon unlocks
     UPGRADE_ORBITERS,
     UPGRADE_BEAM,
@@ -46,15 +48,15 @@ typedef enum {
     UPGRADE_BOOMERANG,
     UPGRADE_TRAIL,
     UPGRADE_WHIP,
-    // Orbiters upgrades
-    UPGRADE_ORBITER_COUNT,
-    UPGRADE_ORBITER_RADIUS,
-    // Beam upgrades
-    UPGRADE_BEAM_WIDTH,
-    UPGRADE_BEAM_INTERVAL,
-    // Nova upgrades
-    UPGRADE_NOVA_RANGE,
-    UPGRADE_NOVA_DAMAGE,
+    // Weapon-specific upgrades (one per weapon)
+    UPGRADE_ORBITER_COUNT,    // Orbiters: +1 orb
+    UPGRADE_BEAM_ARC,         // Beam: wider sweep angle
+    UPGRADE_NOVA_RANGE,       // Nova: bigger radius
+    UPGRADE_MINE_BLAST,       // Mines: bigger explosion
+    UPGRADE_CHAIN_JUMPS,      // Chain: more jumps
+    UPGRADE_BOOMERANG_SPIN,   // Boomerang: bigger hitbox
+    UPGRADE_TRAIL_DURATION,   // Trail: longer life
+    UPGRADE_WHIP_ARC,         // Whip: wider arc
     UPGRADE_COUNT
 } UpgradeType;
 
@@ -135,6 +137,7 @@ typedef struct {
     int damage;
     float length;
     float width;
+    float sweep_angle;   // +- half-angle covered during one sweep
 } BeamWeapon;
 
 typedef struct {
@@ -153,6 +156,7 @@ typedef struct {
     float timer;
     float interval;
     int damage;
+    float explosion_radius;
 } MinesWeapon;
 
 typedef struct {
@@ -170,6 +174,7 @@ typedef struct {
     float timer;
     float interval;
     int damage;
+    float radius;
 } BoomerangWeapon;
 
 typedef struct {
@@ -177,6 +182,7 @@ typedef struct {
     TrailMark slots[MAX_TRAIL_MARKS];
     float timer;
     int damage;
+    float life;
 } TrailWeapon;
 
 typedef struct {
@@ -185,6 +191,7 @@ typedef struct {
     float anim;
     float interval;
     int damage;
+    float arc;
 } WhipWeapon;
 
 typedef enum {
@@ -308,6 +315,8 @@ typedef struct {
     float weapon_rate_mult;        // RAPID FIRE: multiplies every weapon interval
     int weapon_damage_bonus;       // POWER: added to every weapon damage
     int weapon_extra_projectiles;  // MULTI SHOT: extra projectiles for projectile weapons
+    float weapon_area_mult;        // AREA: multiplies AoE radii (Nova/Mine/Whip/Trail/Beam width)
+    float weapon_duration_mult;    // DURATION: multiplies timed effects (Trail/Mine/Beam/Whip lifetimes)
 
     // Weapons (each in its own container struct)
     PulseWeapon pulse;
@@ -363,6 +372,7 @@ typedef struct {
     bool upgrading;
     UpgradeType upgrade_choices[UPGRADE_CHOICES];
     int upgrade_hover;
+    int upgrade_picks[UPGRADE_COUNT];
 
     float scale;
     Vector2 offset;

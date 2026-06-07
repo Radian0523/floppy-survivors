@@ -201,13 +201,22 @@
 #define UPGRADE_MAGNET_ADD 34.0f
 #define UPGRADE_VITALITY_ADD 1
 
-// Weapon upgrades
+// Global passives
+#define UPGRADE_AREA_MULT_ADD 0.15f       // +15% AoE per pick
+#define UPGRADE_DURATION_MULT_ADD 0.20f   // +20% duration per pick
+
+// Weapon upgrades (one per weapon)
 #define UPGRADE_ORBITER_COUNT_ADD 1
-#define UPGRADE_ORBITER_RADIUS_ADD 20.0f
-#define UPGRADE_BEAM_WIDTH_ADD 4.0f
-#define UPGRADE_BEAM_INTERVAL_MULT 0.8f
+#define UPGRADE_BEAM_ARC_ADD 0.30f       // radians added to sweep half-angle
 #define UPGRADE_NOVA_RANGE_ADD 30.0f
-#define UPGRADE_NOVA_DAMAGE_ADD 1
+#define UPGRADE_MINE_BLAST_ADD 20.0f
+#define UPGRADE_CHAIN_JUMPS_ADD 1
+#define UPGRADE_BOOMERANG_SPIN_ADD 6.0f
+#define UPGRADE_TRAIL_DURATION_ADD 0.8f
+#define UPGRADE_WHIP_ARC_ADD 0.5f
+
+// Max picks per upgrade (weapon unlocks are implicitly capped at 1)
+#define UPGRADE_MAX_PICKS 3
 
 // Game
 #define GAME_DURATION 300.0f

@@ -7,6 +7,7 @@ void mines_init(GameState *gs) {
     gs->mines.timer = MINE_INTERVAL;
     gs->mines.interval = MINE_INTERVAL;
     gs->mines.damage = MINE_DAMAGE;
+    gs->mines.explosion_radius = MINE_EXPLOSION_RADIUS;
     for (int i = 0; i < MAX_MINES; i++) gs->mines.slots[i].active = false;
 }
 
@@ -15,7 +16,7 @@ static void deploy_mine(GameState *gs, Vector2 pos) {
         if (!gs->mines.slots[i].active) {
             gs->mines.slots[i].active = true;
             gs->mines.slots[i].pos = pos;
-            gs->mines.slots[i].life = MINE_LIFE;
+            gs->mines.slots[i].life = MINE_LIFE * gs->weapon_duration_mult;
             return;
         }
     }
@@ -37,27 +38,29 @@ void mines_update(GameState *gs, float dt) {
 
         bool detonate = (m->life <= 0);
 
+        float trig_r = MINE_RADIUS * gs->weapon_area_mult;
         for (int j = 0; j < MAX_ENEMIES && !detonate; j++) {
             if (!gs->enemies[j].active) continue;
             if (gs->enemies[j].phased) continue;
             float dx = gs->enemies[j].pos.x - m->pos.x;
             float dy = gs->enemies[j].pos.y - m->pos.y;
-            if (dx * dx + dy * dy < (MINE_RADIUS + gs->enemies[j].radius) *
-                                    (MINE_RADIUS + gs->enemies[j].radius)) {
+            if (dx * dx + dy * dy < (trig_r + gs->enemies[j].radius) *
+                                    (trig_r + gs->enemies[j].radius)) {
                 detonate = true;
             }
         }
         if (!detonate && gs->boss.active) {
             float dx = gs->boss.pos.x - m->pos.x;
             float dy = gs->boss.pos.y - m->pos.y;
-            if (dx * dx + dy * dy < (MINE_RADIUS + BOSS_RADIUS) *
-                                    (MINE_RADIUS + BOSS_RADIUS)) {
+            if (dx * dx + dy * dy < (trig_r + BOSS_RADIUS) *
+                                    (trig_r + BOSS_RADIUS)) {
                 detonate = true;
             }
         }
 
         if (detonate) {
-            weapon_aoe_damage(gs, m->pos, MINE_EXPLOSION_RADIUS,
+            weapon_aoe_damage(gs, m->pos,
+                gs->mines.explosion_radius * gs->weapon_area_mult,
                 gs->mines.damage,
                 (Color){255, 220, 100, 255});
             m->active = false;

@@ -14,6 +14,47 @@ static void fire_bullet(GameState *gs, Vector2 dir) {
     }
 }
 
+// Find up to `n` nearest enemies/boss positions, write to out[].
+// Returns number actually found.
+static int find_n_nearest_targets(const GameState *gs, int n, Vector2 *out) {
+    if (n <= 0) return 0;
+    typedef struct { Vector2 pos; float d2; } Cand;
+    Cand cands[MAX_ENEMIES + 1];
+    int nc = 0;
+
+    for (int i = 0; i < MAX_ENEMIES; i++) {
+        if (!gs->enemies[i].active) continue;
+        if (gs->enemies[i].phased) continue;
+        float dx = gs->enemies[i].pos.x - gs->player.pos.x;
+        float dy = gs->enemies[i].pos.y - gs->player.pos.y;
+        cands[nc].pos = gs->enemies[i].pos;
+        cands[nc].d2 = dx * dx + dy * dy;
+        nc++;
+    }
+    if (gs->boss.active) {
+        float dx = gs->boss.pos.x - gs->player.pos.x;
+        float dy = gs->boss.pos.y - gs->player.pos.y;
+        cands[nc].pos = gs->boss.pos;
+        cands[nc].d2 = dx * dx + dy * dy;
+        nc++;
+    }
+
+    int take = (n < nc) ? n : nc;
+    for (int i = 0; i < take; i++) {
+        int min_j = i;
+        for (int j = i + 1; j < nc; j++) {
+            if (cands[j].d2 < cands[min_j].d2) min_j = j;
+        }
+        if (min_j != i) {
+            Cand tmp = cands[i];
+            cands[i] = cands[min_j];
+            cands[min_j] = tmp;
+        }
+        out[i] = cands[i].pos;
+    }
+    return take;
+}
+
 void weapon_update(GameState *gs, float dt) {
     if (!gs->pulse.has) return;
 
@@ -21,20 +62,20 @@ void weapon_update(GameState *gs, float dt) {
     if (gs->pulse.fire_timer <= 0) {
         gs->pulse.fire_timer = gs->pulse.fire_interval * gs->weapon_rate_mult;
 
-        Vector2 target_pos;
-        if (weapon_nearest_target(gs, gs->player.pos, &target_pos)) {
-            float dx = target_pos.x - gs->player.pos.x;
-            float dy = target_pos.y - gs->player.pos.y;
+        int total = gs->pulse.bullet_count + gs->weapon_extra_projectiles;
+        Vector2 targets[MAX_ENEMIES + 1];
+        int found = find_n_nearest_targets(gs, total, targets);
+
+        for (int i = 0; i < found; i++) {
+            float dx = targets[i].x - gs->player.pos.x;
+            float dy = targets[i].y - gs->player.pos.y;
             float len = sqrtf(dx * dx + dy * dy);
             if (len > 0) {
                 Vector2 dir = {dx / len, dy / len};
-                int total = gs->pulse.bullet_count + gs->weapon_extra_projectiles;
-                for (int i = 0; i < total; i++) {
-                    fire_bullet(gs, dir);
-                }
-                audio_play(SFX_SHOOT);
+                fire_bullet(gs, dir);
             }
         }
+        if (found > 0) audio_play(SFX_SHOOT);
     }
 }
 

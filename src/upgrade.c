@@ -10,6 +10,8 @@ static const char* upgrade_names[] = {
     "SPEED",
     "MAGNET",
     "VITALITY",
+    "AREA",
+    "DURATION",
     "ORBITERS",
     "BEAM",
     "NOVA",
@@ -19,20 +21,24 @@ static const char* upgrade_names[] = {
     "TRAIL",
     "WHIP",
     "ORB COUNT",
-    "ORB ORBIT",
-    "BEAM WIDTH",
-    "BEAM RATE",
+    "BEAM ARC",
     "NOVA RANGE",
-    "NOVA POWER"
+    "MINE BLAST",
+    "CHAIN JUMPS",
+    "BOOMERANG SPIN",
+    "TRAIL DURATION",
+    "WHIP ARC",
 };
 
 static const char* upgrade_descs[] = {
     "Fire rate x0.82",
-    "Bullets +1",
+    "Pulse fires at +1 enemy",
     "Damage +1",
     "Move speed x1.12",
     "Pickup range +34",
     "Max HP +1",
+    "AoE radius +15%",
+    "Effect duration +20%",
     "Orbiting shields",
     "Sweeping laser",
     "Pulse wave",
@@ -42,11 +48,13 @@ static const char* upgrade_descs[] = {
     "Damaging trail",
     "Melee arc swing",
     "Orbiters +1",
-    "Orbit radius +20",
-    "Beam width +4",
-    "Beam interval x0.8",
+    "Beam sweep +0.3 rad",
     "Nova range +30",
-    "Nova damage +1"
+    "Mine blast radius +20",
+    "Chain jumps +1",
+    "Boomerang hitbox +6",
+    "Trail life +0.8s",
+    "Whip arc +0.5 rad",
 };
 
 static Color upgrade_colors[] = {
@@ -56,6 +64,8 @@ static Color upgrade_colors[] = {
     {120, 255, 200, 255},   // SPEED
     {120, 255, 120, 255},   // MAGNET - green
     {120, 255, 120, 255},   // VITALITY - green
+    {180, 255, 220, 255},   // AREA - mint
+    {200, 220, 255, 255},   // DURATION - pale blue
     {100, 150, 255, 255},   // ORBITERS - blue
     {180, 80, 255, 255},    // BEAM - violet
     {100, 255, 255, 255},   // NOVA - cyan
@@ -65,11 +75,13 @@ static Color upgrade_colors[] = {
     {120, 220, 255, 255},   // TRAIL - light blue
     {220, 220, 255, 255},   // WHIP - silver white
     {100, 150, 255, 255},   // ORB COUNT
-    {100, 150, 255, 255},   // ORB ORBIT
-    {180, 80, 255, 255},    // BEAM WIDTH
-    {180, 80, 255, 255},    // BEAM RATE
+    {180, 80, 255, 255},    // BEAM ARC
     {100, 255, 255, 255},   // NOVA RANGE
-    {100, 255, 255, 255}    // NOVA POWER
+    {255, 220, 100, 255},   // MINE BLAST
+    {200, 240, 255, 255},   // CHAIN JUMPS
+    {150, 255, 180, 255},   // BOOMERANG SPIN
+    {120, 220, 255, 255},   // TRAIL DURATION
+    {220, 220, 255, 255},   // WHIP ARC
 };
 
 const char* upgrade_get_name(UpgradeType type) {
@@ -77,6 +89,10 @@ const char* upgrade_get_name(UpgradeType type) {
 }
 
 static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
+    // Common pick limit (weapon unlocks are implicitly capped via the
+    // has-check; everything else is bounded by UPGRADE_MAX_PICKS).
+    if (gs->upgrade_picks[type] >= UPGRADE_MAX_PICKS) return false;
+
     switch (type) {
         case UPGRADE_ORBITERS:    return !gs->orbiters.has;
         case UPGRADE_BEAM:        return !gs->beam.has;
@@ -88,14 +104,13 @@ static bool is_upgrade_available(const GameState *gs, UpgradeType type) {
         case UPGRADE_WHIP:        return !gs->whip.has;
         case UPGRADE_ORBITER_COUNT:
             return gs->orbiters.has && gs->orbiters.count < MAX_ORBITERS;
-        case UPGRADE_ORBITER_RADIUS:
-            return gs->orbiters.has;
-        case UPGRADE_BEAM_WIDTH:
-        case UPGRADE_BEAM_INTERVAL:
-            return gs->beam.has;
-        case UPGRADE_NOVA_RANGE:
-        case UPGRADE_NOVA_DAMAGE:
-            return gs->nova.has;
+        case UPGRADE_BEAM_ARC:        return gs->beam.has;
+        case UPGRADE_NOVA_RANGE:      return gs->nova.has;
+        case UPGRADE_MINE_BLAST:      return gs->mines.has;
+        case UPGRADE_CHAIN_JUMPS:     return gs->chain.has;
+        case UPGRADE_BOOMERANG_SPIN:  return gs->boomerang.has;
+        case UPGRADE_TRAIL_DURATION:  return gs->trail.has;
+        case UPGRADE_WHIP_ARC:        return gs->whip.has;
         default:
             return true;
     }
@@ -159,6 +174,12 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
             gs->player.max_hp += UPGRADE_VITALITY_ADD;
             gs->player.hp += UPGRADE_VITALITY_ADD;
             break;
+        case UPGRADE_AREA:
+            gs->weapon_area_mult += UPGRADE_AREA_MULT_ADD;
+            break;
+        case UPGRADE_DURATION:
+            gs->weapon_duration_mult += UPGRADE_DURATION_MULT_ADD;
+            break;
         case UPGRADE_ORBITERS:
             orbiters_init(gs);
             break;
@@ -190,24 +211,31 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
                 gs->orbiters.count += UPGRADE_ORBITER_COUNT_ADD;
             }
             break;
-        case UPGRADE_ORBITER_RADIUS:
-            gs->orbiters.orbit_radius += UPGRADE_ORBITER_RADIUS_ADD;
-            break;
-        case UPGRADE_BEAM_WIDTH:
-            gs->beam.width += UPGRADE_BEAM_WIDTH_ADD;
-            break;
-        case UPGRADE_BEAM_INTERVAL:
-            gs->beam.interval *= UPGRADE_BEAM_INTERVAL_MULT;
+        case UPGRADE_BEAM_ARC:
+            gs->beam.sweep_angle += UPGRADE_BEAM_ARC_ADD;
             break;
         case UPGRADE_NOVA_RANGE:
             gs->nova.max_radius += UPGRADE_NOVA_RANGE_ADD;
             break;
-        case UPGRADE_NOVA_DAMAGE:
-            gs->nova.damage += UPGRADE_NOVA_DAMAGE_ADD;
+        case UPGRADE_MINE_BLAST:
+            gs->mines.explosion_radius += UPGRADE_MINE_BLAST_ADD;
+            break;
+        case UPGRADE_CHAIN_JUMPS:
+            gs->chain.jumps += UPGRADE_CHAIN_JUMPS_ADD;
+            break;
+        case UPGRADE_BOOMERANG_SPIN:
+            gs->boomerang.radius += UPGRADE_BOOMERANG_SPIN_ADD;
+            break;
+        case UPGRADE_TRAIL_DURATION:
+            gs->trail.life += UPGRADE_TRAIL_DURATION_ADD;
+            break;
+        case UPGRADE_WHIP_ARC:
+            gs->whip.arc += UPGRADE_WHIP_ARC_ADD;
             break;
         default:
             break;
     }
+    gs->upgrade_picks[type]++;
 }
 
 void upgrade_update(GameState *gs) {
@@ -296,9 +324,11 @@ static UpgradeCategory upgrade_category(UpgradeType type) {
         case UPGRADE_SPEED:
         case UPGRADE_MAGNET:
         case UPGRADE_VITALITY:
+        case UPGRADE_AREA:
+        case UPGRADE_DURATION:
             return CAT_PASSIVE;
         default:
-            return CAT_WEAPON_UP;
+            return CAT_WEAPON_UP;  // includes globals & weapon-specific
     }
 }
 
@@ -388,6 +418,34 @@ void upgrade_draw_preview(UpgradeType type, float cx, float cy, float t) {
             DrawRectangle((int)(cx - 9), (int)(cy - 2), 18, 4, white);
             break;
         }
+        case UPGRADE_AREA: {
+            // Expanding rings (multiple sizes)
+            float pulse = 0.7f + 0.3f * sinf(t * 2.5f);
+            DrawRing((Vector2){cx, cy}, 6 * pulse, 7 * pulse, 0, 360, 24, col);
+            DrawRing((Vector2){cx, cy}, 12 * pulse, 13 * pulse, 0, 360, 24,
+                     (Color){col.r, col.g, col.b, 180});
+            DrawRing((Vector2){cx, cy}, 18 * pulse, 19 * pulse, 0, 360, 24,
+                     (Color){col.r, col.g, col.b, 100});
+            break;
+        }
+        case UPGRADE_DURATION: {
+            // Hourglass / sand timer
+            Vector2 top_l = {cx - 10, cy - 10};
+            Vector2 top_r = {cx + 10, cy - 10};
+            Vector2 bot_l = {cx - 10, cy + 10};
+            Vector2 bot_r = {cx + 10, cy + 10};
+            Vector2 center = {cx, cy};
+            DrawTriangle(top_l, top_r, center, col);
+            DrawTriangle(top_r, top_l, center, col);  // backside for raylib winding
+            DrawTriangle(bot_r, bot_l, center, col);
+            DrawTriangle(bot_l, bot_r, center, col);
+            // Sand falling
+            float fall = fmodf(t * 6.0f, 6.0f);
+            DrawRectangle((int)(cx - 1), (int)(cy - 4 + fall), 2, 3, white);
+            DrawLineEx(top_l, top_r, 2.0f, col);
+            DrawLineEx(bot_l, bot_r, 2.0f, col);
+            break;
+        }
         case UPGRADE_ORBITERS:
         case UPGRADE_ORBITER_COUNT: {
             DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
@@ -399,55 +457,58 @@ void upgrade_draw_preview(UpgradeType type, float cx, float cy, float t) {
             }
             break;
         }
-        case UPGRADE_ORBITER_RADIUS: {
-            DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
-            for (int k = 0; k < 3; k++) {
-                float a = t * 2.0f + (2.0f * 3.14159f * k / 3);
-                Vector2 p = {cx + cosf(a) * 22, cy + sinf(a) * 22};
-                DrawCircleV(p, 4, col);
-            }
-            DrawRing((Vector2){cx, cy}, 12, 13, 0, 360, 24, (Color){col.r, col.g, col.b, 100});
-            break;
-        }
-        case UPGRADE_BEAM:
-        case UPGRADE_BEAM_WIDTH:
-        case UPGRADE_BEAM_INTERVAL: {
+        case UPGRADE_BEAM: {
             DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
             float a = sinf(t * 2.0f) * 0.7f;
-            float w = (type == UPGRADE_BEAM_WIDTH) ? 5.0f : 3.0f;
             Vector2 e = {cx + cosf(a) * 24, cy + sinf(a) * 24};
-            DrawLineEx((Vector2){cx, cy}, e, w, col);
+            DrawLineEx((Vector2){cx, cy}, e, 3.0f, col);
+            break;
+        }
+        case UPGRADE_BEAM_ARC: {
+            // Bigger sweep range visualization
+            DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
+            float a = sinf(t * 2.0f) * 1.1f;  // wider swing
+            Vector2 e = {cx + cosf(a) * 24, cy + sinf(a) * 24};
+            DrawLineEx((Vector2){cx, cy}, e, 3.0f, col);
+            // arc indicator
+            DrawRing((Vector2){cx, cy}, 22, 24,
+                     -1.1f * (180.0f / 3.14159f),
+                      1.1f * (180.0f / 3.14159f), 24,
+                     (Color){col.r, col.g, col.b, 120});
             break;
         }
         case UPGRADE_NOVA:
-        case UPGRADE_NOVA_RANGE:
-        case UPGRADE_NOVA_DAMAGE: {
+        case UPGRADE_NOVA_RANGE: {
             DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
             float r_max = (type == UPGRADE_NOVA_RANGE) ? 28.0f : 22.0f;
             float r = fmodf(t * 35.0f, r_max);
             float alpha = 1.0f - r / r_max;
             Color rc = {col.r, col.g, col.b, (unsigned char)(255 * alpha)};
             DrawRing((Vector2){cx, cy}, r - 2, r + 2, 0, 360, 24, rc);
-            if (type == UPGRADE_NOVA_DAMAGE) {
-                DrawRing((Vector2){cx, cy}, r - 4, r + 4, 0, 360, 24,
-                         (Color){col.r, col.g, col.b, (unsigned char)(120 * alpha)});
-            }
             break;
         }
-        case UPGRADE_MINES: {
-            // 3 X marks at fixed positions, pulsing
+        case UPGRADE_MINES:
+        case UPGRADE_MINE_BLAST: {
+            // X marks; for MINE_BLAST show a wider explosion ring
             float pulse = 0.7f + 0.3f * sinf(t * 4.0f);
             Color cc = {col.r, col.g, col.b, (unsigned char)(255 * pulse)};
-            for (int k = 0; k < 3; k++) {
-                float mx = cx - 14 + k * 14;
+            int n = (type == UPGRADE_MINE_BLAST) ? 1 : 3;
+            for (int k = 0; k < n; k++) {
+                float mx = cx + (n == 3 ? -14 + k * 14 : 0);
                 float my = cy + sinf(t * 1.5f + k) * 2.0f;
                 DrawLineEx((Vector2){mx - 4, my - 4}, (Vector2){mx + 4, my + 4}, 2, cc);
                 DrawLineEx((Vector2){mx + 4, my - 4}, (Vector2){mx - 4, my + 4}, 2, cc);
                 DrawCircleV((Vector2){mx, my}, 2, cc);
             }
+            if (type == UPGRADE_MINE_BLAST) {
+                float r = 14 + 4 * sinf(t * 4.0f);
+                DrawRing((Vector2){cx, cy}, r - 1, r + 1, 0, 360, 24,
+                         (Color){col.r, col.g, col.b, 180});
+            }
             break;
         }
-        case UPGRADE_CHAIN: {
+        case UPGRADE_CHAIN:
+        case UPGRADE_CHAIN_JUMPS: {
             // Zigzag lightning
             float off = sinf(t * 4.0f) * 3.0f;
             Vector2 pts[5] = {
@@ -463,34 +524,44 @@ void upgrade_draw_preview(UpgradeType type, float cx, float cy, float t) {
             for (int k = 0; k < 5; k++) DrawCircleV(pts[k], 2.5f, col);
             break;
         }
-        case UPGRADE_BOOMERANG: {
-            // Spinning X
+        case UPGRADE_BOOMERANG:
+        case UPGRADE_BOOMERANG_SPIN: {
             DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
             float spin = t * 8.0f;
+            float r_x = (type == UPGRADE_BOOMERANG_SPIN) ? 14 : 12;
             for (int k = 0; k < 2; k++) {
                 float a = spin + k * 3.14159f;
-                Vector2 e1 = {cx + cosf(a) * 12, cy + sinf(a) * 12};
-                Vector2 e2 = {cx - cosf(a) * 12, cy - sinf(a) * 12};
-                DrawLineEx(e1, e2, 3.0f, col);
+                Vector2 e1 = {cx + cosf(a) * r_x, cy + sinf(a) * r_x};
+                Vector2 e2 = {cx - cosf(a) * r_x, cy - sinf(a) * r_x};
+                DrawLineEx(e1, e2,
+                           (type == UPGRADE_BOOMERANG_SPIN) ? 4.5f : 3.0f,
+                           col);
+            }
+            if (type == UPGRADE_BOOMERANG_SPIN) {
+                DrawRing((Vector2){cx, cy}, r_x + 3, r_x + 4, 0, 360, 24,
+                         (Color){col.r, col.g, col.b, 100});
             }
             break;
         }
-        case UPGRADE_TRAIL: {
-            // Dotted trail behind a circle
+        case UPGRADE_TRAIL:
+        case UPGRADE_TRAIL_DURATION: {
             DrawCircleV((Vector2){cx + 14, cy}, 4, (Color){100, 255, 255, 255});
-            for (int k = 0; k < 5; k++) {
-                float fade = 1.0f - k * 0.18f;
-                float r = 4.0f - k * 0.5f;
+            int n = (type == UPGRADE_TRAIL_DURATION) ? 7 : 5;
+            for (int k = 0; k < n; k++) {
+                float fade = 1.0f - k * (0.9f / n);
+                float r = 4.0f - k * 0.4f;
                 Color cc = {col.r, col.g, col.b, (unsigned char)(255 * fade * 0.7f)};
-                DrawCircleV((Vector2){cx + 6 - k * 5, cy}, r, cc);
+                DrawCircleV((Vector2){cx + 6 - k * 4, cy}, r, cc);
             }
             break;
         }
-        case UPGRADE_WHIP: {
-            // Arc swing
+        case UPGRADE_WHIP:
+        case UPGRADE_WHIP_ARC: {
             DrawCircleV((Vector2){cx, cy}, 4, (Color){100, 255, 255, 255});
             float arc_start = sinf(t * 3.0f) * 50.0f;
-            DrawRing((Vector2){cx, cy}, 15, 18, arc_start - 30, arc_start + 30, 24, col);
+            float half_deg = (type == UPGRADE_WHIP_ARC) ? 50.0f : 30.0f;
+            DrawRing((Vector2){cx, cy}, 15, 18,
+                     arc_start - half_deg, arc_start + half_deg, 24, col);
             break;
         }
         default:

@@ -7,6 +7,7 @@ void boomerang_init(GameState *gs) {
     gs->boomerang.timer = BOOMERANG_INTERVAL;
     gs->boomerang.interval = BOOMERANG_INTERVAL;
     gs->boomerang.damage = BOOMERANG_DAMAGE;
+    gs->boomerang.radius = BOOMERANG_RADIUS;
     for (int i = 0; i < MAX_BOOMERANGS; i++) gs->boomerang.slots[i].active = false;
 }
 
@@ -48,7 +49,7 @@ void boomerang_update(GameState *gs, float dt) {
             float dx = gs->player.pos.x - b->pos.x;
             float dy = gs->player.pos.y - b->pos.y;
             float len = sqrtf(dx * dx + dy * dy);
-            if (len < BOOMERANG_RADIUS) {
+            if (len < gs->boomerang.radius) {
                 b->active = false;
                 continue;
             }
@@ -69,8 +70,8 @@ void boomerang_update(GameState *gs, float dt) {
             float dx = b->pos.x - gs->enemies[j].pos.x;
             float dy = b->pos.y - gs->enemies[j].pos.y;
             if (dx * dx + dy * dy <
-                (BOOMERANG_RADIUS + gs->enemies[j].radius) *
-                (BOOMERANG_RADIUS + gs->enemies[j].radius)) {
+                (gs->boomerang.radius + gs->enemies[j].radius) *
+                (gs->boomerang.radius + gs->enemies[j].radius)) {
                 weapon_hit_enemy(gs, j, gs->boomerang.damage,
                                  (Color){150, 255, 180, 255});
             }
@@ -79,8 +80,8 @@ void boomerang_update(GameState *gs, float dt) {
             float dx = b->pos.x - gs->boss.pos.x;
             float dy = b->pos.y - gs->boss.pos.y;
             if (dx * dx + dy * dy <
-                (BOOMERANG_RADIUS + BOSS_RADIUS) *
-                (BOOMERANG_RADIUS + BOSS_RADIUS)) {
+                (gs->boomerang.radius + BOSS_RADIUS) *
+                (gs->boomerang.radius + BOSS_RADIUS)) {
                 weapon_hit_boss(gs, gs->boomerang.damage);
             }
         }
@@ -94,7 +95,7 @@ void boomerang_draw(const GameState *gs, float scale, Vector2 offset) {
         if (!gs->boomerang.slots[i].active) continue;
         float x = gs->boomerang.slots[i].pos.x * scale + offset.x;
         float y = gs->boomerang.slots[i].pos.y * scale + offset.y;
-        float r = BOOMERANG_RADIUS * scale;
+        float r = gs->boomerang.radius * scale;
         float spin = t * 12.0f;
         Color col = {150, 255, 180, 255};
         for (int k = 0; k < 2; k++) {

@@ -45,6 +45,8 @@ static void game_init(GameState *gs) {
     gs->weapon_rate_mult = 1.0f;
     gs->weapon_damage_bonus = 0;
     gs->weapon_extra_projectiles = 0;
+    gs->weapon_area_mult = 1.0f;
+    gs->weapon_duration_mult = 1.0f;
 
     gs->pulse.has = false;
     gs->pulse.fire_timer = 0;
@@ -83,6 +85,7 @@ static void game_init(GameState *gs) {
     gs->upgrade_hover = -1;
     gs->paused = false;
     gs->last_score_flags = 0;
+    for (int i = 0; i < UPGRADE_COUNT; i++) gs->upgrade_picks[i] = 0;
 }
 
 void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {

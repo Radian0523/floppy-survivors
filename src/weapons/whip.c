@@ -8,6 +8,7 @@ void whip_init(GameState *gs) {
     gs->whip.anim = 0;
     gs->whip.interval = WHIP_INTERVAL;
     gs->whip.damage = WHIP_DAMAGE;
+    gs->whip.arc = WHIP_ARC;
 }
 
 void whip_update(GameState *gs, float dt) {
@@ -18,10 +19,11 @@ void whip_update(GameState *gs, float dt) {
     gs->whip.timer -= dt;
     if (gs->whip.timer > 0) return;
     gs->whip.timer = gs->whip.interval * gs->weapon_rate_mult;
-    gs->whip.anim = WHIP_ANIM;
+    gs->whip.anim = WHIP_ANIM * gs->weapon_duration_mult;
 
     float center = gs->player.facing_angle;
-    float r2 = WHIP_RANGE * WHIP_RANGE;
+    float range_eff = WHIP_RANGE * gs->weapon_area_mult;
+    float r2 = range_eff * range_eff;
 
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!gs->enemies[i].active) continue;
@@ -34,7 +36,7 @@ void whip_update(GameState *gs, float dt) {
         float diff = ang - center;
         while (diff > 3.14159f) diff -= 2.0f * 3.14159f;
         while (diff < -3.14159f) diff += 2.0f * 3.14159f;
-        if (fabsf(diff) < WHIP_ARC * 0.5f) {
+        if (fabsf(diff) < gs->whip.arc * 0.5f) {
             weapon_hit_enemy(gs, i, gs->whip.damage,
                              (Color){220, 220, 255, 255});
         }
@@ -48,7 +50,7 @@ void whip_update(GameState *gs, float dt) {
             float diff = ang - center;
             while (diff > 3.14159f) diff -= 2.0f * 3.14159f;
             while (diff < -3.14159f) diff += 2.0f * 3.14159f;
-            if (fabsf(diff) < WHIP_ARC * 0.5f) {
+            if (fabsf(diff) < gs->whip.arc * 0.5f) {
                 weapon_hit_boss(gs, gs->whip.damage);
             }
         }
@@ -61,10 +63,11 @@ void whip_draw(const GameState *gs, float scale, Vector2 offset) {
 
     float px = gs->player.pos.x * scale + offset.x;
     float py = gs->player.pos.y * scale + offset.y;
-    float r = WHIP_RANGE * scale;
-    float alpha = gs->whip.anim / WHIP_ANIM;
+    float r = WHIP_RANGE * gs->weapon_area_mult * scale;
+    float anim_max = WHIP_ANIM * gs->weapon_duration_mult;
+    float alpha = (anim_max > 0) ? gs->whip.anim / anim_max : 0;
     float center = gs->player.facing_angle * (180.0f / 3.14159f);
-    float arc_deg = WHIP_ARC * (180.0f / 3.14159f);
+    float arc_deg = gs->whip.arc * (180.0f / 3.14159f);
 
     Color outer = {220, 220, 255, (unsigned char)(180 * alpha)};
     Color inner = {255, 255, 255, (unsigned char)(220 * alpha)};

@@ -17,6 +17,8 @@ void nova_update(GameState *gs, float dt) {
 
     Color popup_col = {255, 200, 255, 255};
 
+    float eff_max = gs->nova.max_radius * gs->weapon_area_mult;
+
     if (gs->nova.expanding) {
         gs->nova.current_radius += NOVA_EXPAND_SPEED * dt;
 
@@ -44,7 +46,7 @@ void nova_update(GameState *gs, float dt) {
             }
         }
 
-        if (gs->nova.current_radius >= gs->nova.max_radius) {
+        if (gs->nova.current_radius >= eff_max) {
             gs->nova.expanding = false;
             gs->nova.timer = gs->nova.interval * gs->weapon_rate_mult;
         }
@@ -63,7 +65,8 @@ void nova_draw(const GameState *gs, float scale, Vector2 offset) {
     float px = gs->player.pos.x * scale + offset.x;
     float py = gs->player.pos.y * scale + offset.y;
     float r = gs->nova.current_radius * scale;
-    float alpha = 1.0f - (gs->nova.current_radius / gs->nova.max_radius);
+    float eff_max = gs->nova.max_radius * gs->weapon_area_mult;
+    float alpha = 1.0f - (gs->nova.current_radius / eff_max);
     Color col = {100, 255, 255, (unsigned char)(200 * alpha)};
     Color col_inner = {180, 255, 255, (unsigned char)(255 * alpha)};
     DrawRing((Vector2){px, py}, r - 5 * scale, r + 5 * scale, 0, 360, 36, col);
