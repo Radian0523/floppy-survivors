@@ -216,7 +216,7 @@
 #define UPGRADE_WHIP_ARC_ADD 0.5f
 
 // Max picks per upgrade (weapon unlocks are implicitly capped at 1)
-#define UPGRADE_MAX_PICKS 3
+#define UPGRADE_MAX_PICKS 8
 
 // Game
 #define GAME_DURATION 300.0f
