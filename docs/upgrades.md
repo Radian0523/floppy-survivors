@@ -10,18 +10,18 @@ DISK SURVIVOR の武器・強化・パッシブの全データ。
 
 レベルアップ画面に出る可能性のあるすべての選択肢。**右上タグ**は UI 上の分類バッジ。
 
-**ピック制限：** 武器解放（NEW）は 1 回のみ取得可能。それ以外はすべて **最大 3 回** まで（`UPGRADE_MAX_PICKS`）。
+**ピック制限：** 武器解放（NEW）は 1 回のみ取得可能。それ以外はすべて **最大 8 回** まで（`UPGRADE_MAX_PICKS`）。
 
 | 名前 | タグ | 効果 | 最大 | 出現条件 |
 |------|------|------|----|---------|
-| **RAPID FIRE** | WEAPON+ | **全武器**の発射間隔 × 0.82 | 3 | 常時 |
-| **MULTI SHOT** | WEAPON+ | Pulse: 撃つ敵数 +1（近い順）／ Boomerang: 投擲数 +1（扇状） | 3 | 常時 |
-| **POWER** | WEAPON+ | **全武器**のダメージ +1 | 3 | 常時 |
-| **SPEED** | PASSIVE | 移動速度 × 1.12 | 3 | 常時 |
-| **MAGNET** | PASSIVE | ジェム回収範囲 +34 px | 3 | 常時 |
-| **VITALITY** | PASSIVE | 最大 HP +1（即時回復） | 3 | 常時 |
-| **AREA** | PASSIVE | **全武器の AoE 半径 × 1.15**（Nova/Mine/Whip/Trail/Beam幅） | 3 | 常時 |
-| **DURATION** | PASSIVE | **全武器の持続時間 × 1.20**（Trail寿命/Beam発射時間/Whipアニメ/Mine寿命/Chain表示） | 3 | 常時 |
+| **RAPID FIRE** | WEAPON+ | **全武器**の発射間隔 × 0.82 | 8 | 常時 |
+| **MULTI SHOT** | WEAPON+ | Pulse: 撃つ敵数 +1（近い順）／ Boomerang: 投擲数 +1（扇状） | 8 | 常時 |
+| **POWER** | WEAPON+ | **全武器**のダメージ +1 | 8 | 常時 |
+| **SPEED** | PASSIVE | 移動速度 × 1.12 | 8 | 常時 |
+| **MAGNET** | PASSIVE | ジェム回収範囲 +34 px | 8 | 常時 |
+| **VITALITY** | PASSIVE | 最大 HP +1（即時回復） | 8 | 常時 |
+| **AREA** | PASSIVE | **全武器の AoE 半径 × 1.15**（Nova/Mine/Whip/Trail/Beam幅） | 8 | 常時 |
+| **DURATION** | PASSIVE | **全武器の持続時間 × 1.20**（Trail寿命/Beam発射時間/Whipアニメ/Mine寿命/Chain表示） | 8 | 常時 |
 | **ORBITERS** | NEW | 武器解放：周回シールド | 1 | Orbiters 未所持 |
 | **BEAM** | NEW | 武器解放：スイープレーザー | 1 | Beam 未所持 |
 | **NOVA** | NEW | 武器解放：パルス波 | 1 | Nova 未所持 |
@@ -30,14 +30,14 @@ DISK SURVIVOR の武器・強化・パッシブの全データ。
 | **BOOMERANG** | NEW | 武器解放：投擲＆帰還 | 1 | Boomerang 未所持 |
 | **TRAIL** | NEW | 武器解放：移動軌跡 | 1 | Trail 未所持 |
 | **WHIP** | NEW | 武器解放：扇状近接 | 1 | Whip 未所持 |
-| **ORB COUNT** | WEAPON+ | オーブ +1 | 3 | Orbiters 所持 ＆ 8 個未満 |
-| **BEAM ARC** | WEAPON+ | ビームのスイープ半角 +0.3 rad | 3 | Beam 所持 |
-| **NOVA RANGE** | WEAPON+ | ノヴァ範囲 +30 | 3 | Nova 所持 |
-| **MINE BLAST** | WEAPON+ | マイン爆発半径 +20 | 3 | Mines 所持 |
-| **CHAIN JUMPS** | WEAPON+ | チェイン連鎖数 +1 | 3 | Chain 所持 |
-| **BOOMERANG SPIN** | WEAPON+ | ブーメラン当たり判定 +6 | 3 | Boomerang 所持 |
-| **TRAIL DURATION** | WEAPON+ | トレイル寿命 +0.8s | 3 | Trail 所持 |
-| **WHIP ARC** | WEAPON+ | ウィップ攻撃範囲 +0.5 rad | 3 | Whip 所持 |
+| **ORB COUNT** | WEAPON+ | オーブ +1 | 8 | Orbiters 所持 ＆ 8 個未満 |
+| **BEAM ARC** | WEAPON+ | ビームのスイープ半角 +0.3 rad | 8 | Beam 所持 |
+| **NOVA RANGE** | WEAPON+ | ノヴァ範囲 +30 | 8 | Nova 所持 |
+| **MINE BLAST** | WEAPON+ | マイン爆発半径 +20 | 8 | Mines 所持 |
+| **CHAIN JUMPS** | WEAPON+ | チェイン連鎖数 +1 | 8 | Chain 所持 |
+| **BOOMERANG SPIN** | WEAPON+ | ブーメラン当たり判定 +6 | 8 | Boomerang 所持 |
+| **TRAIL DURATION** | WEAPON+ | トレイル寿命 +0.8s | 8 | Trail 所持 |
+| **WHIP ARC** | WEAPON+ | ウィップ攻撃範囲 +0.5 rad | 8 | Whip 所持 |
 
 > ✓ **RAPID FIRE / MULTI SHOT / POWER** は**所持している全武器に乗算される**グローバル強化。`gs->weapon_rate_mult`, `gs->weapon_damage_bonus`, `gs->weapon_extra_projectiles` で管理。後から手に入れる武器も同じ乗数が適用される。
 
