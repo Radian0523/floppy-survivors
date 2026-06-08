@@ -85,6 +85,7 @@ void boomerang_update(GameState *gs, float dt) {
                 weapon_hit_boss(gs, gs->boomerang.damage);
             }
         }
+        weapon_destroy_bullets_at(gs, b->pos, gs->boomerang.radius);
     }
 }
 

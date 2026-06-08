@@ -46,6 +46,21 @@ void nova_update(GameState *gs, float dt) {
             }
         }
 
+        // Destroy enemy bullets in the expanding ring band
+        for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
+            if (!gs->enemy_bullets[i].active) continue;
+            float dx = gs->enemy_bullets[i].pos.x - gs->player.pos.x;
+            float dy = gs->enemy_bullets[i].pos.y - gs->player.pos.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            float ring_inner = gs->nova.current_radius - 15.0f;
+            float ring_outer = gs->nova.current_radius + 15.0f;
+            if (dist > ring_inner && dist < ring_outer) {
+                particles_spawn_burst(gs, gs->enemy_bullets[i].pos,
+                                      (Color){255, 200, 200, 255}, 4);
+                gs->enemy_bullets[i].active = false;
+            }
+        }
+
         if (gs->nova.current_radius >= eff_max) {
             gs->nova.expanding = false;
             gs->nova.timer = gs->nova.interval * gs->weapon_rate_mult;

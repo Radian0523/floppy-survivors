@@ -23,6 +23,10 @@ void weapon_aoe_damage(GameState *gs, Vector2 center, float radius,
 void weapon_try_hit_boss_radius(GameState *gs, Vector2 center,
                                 float radius, int base_dmg);
 
+// Destroy any enemy bullets within (radius + ENEMY_BULLET_RADIUS) from center.
+// Spawns a small particle burst per destroyed bullet. Returns number destroyed.
+int weapon_destroy_bullets_at(GameState *gs, Vector2 center, float radius);
+
 // === Targeting ===
 
 // Nearest active, non-phased enemy within max_range from `from`.

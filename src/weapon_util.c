@@ -128,6 +128,24 @@ void weapon_try_hit_boss_radius(GameState *gs, Vector2 center,
     }
 }
 
+int weapon_destroy_bullets_at(GameState *gs, Vector2 center, float radius) {
+    int destroyed = 0;
+    float reach = radius + ENEMY_BULLET_RADIUS;
+    float reach2 = reach * reach;
+    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        if (!gs->enemy_bullets[i].active) continue;
+        float dx = gs->enemy_bullets[i].pos.x - center.x;
+        float dy = gs->enemy_bullets[i].pos.y - center.y;
+        if (dx * dx + dy * dy < reach2) {
+            particles_spawn_burst(gs, gs->enemy_bullets[i].pos,
+                                  (Color){255, 200, 200, 255}, 4);
+            gs->enemy_bullets[i].active = false;
+            destroyed++;
+        }
+    }
+    return destroyed;
+}
+
 int weapon_nearest_enemy(const GameState *gs, Vector2 from, float max_range) {
     int nearest = -1;
     float md = (max_range > 0) ? max_range * max_range : FLT_MAX;

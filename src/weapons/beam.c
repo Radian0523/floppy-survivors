@@ -61,6 +61,21 @@ void beam_update(GameState *gs, float dt) {
                 }
             }
         }
+
+        // Destroy enemy bullets along the beam line
+        for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
+            if (!gs->enemy_bullets[i].active) continue;
+            float dx = gs->enemy_bullets[i].pos.x - gs->player.pos.x;
+            float dy = gs->enemy_bullets[i].pos.y - gs->player.pos.y;
+            float proj = dx * cos_a + dy * sin_a;
+            if (proj < 0 || proj > gs->beam.length) continue;
+            float perp = fabsf(-dx * sin_a + dy * cos_a);
+            if (perp < eff_width / 2 + ENEMY_BULLET_RADIUS) {
+                particles_spawn_burst(gs, gs->enemy_bullets[i].pos,
+                                      (Color){255, 200, 200, 255}, 4);
+                gs->enemy_bullets[i].active = false;
+            }
+        }
     } else {
         gs->beam.timer -= dt;
         if (gs->beam.timer <= 0) {

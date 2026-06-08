@@ -55,6 +55,23 @@ void whip_update(GameState *gs, float dt) {
             }
         }
     }
+    // Destroy enemy bullets within the arc
+    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
+        if (!gs->enemy_bullets[i].active) continue;
+        float dx = gs->enemy_bullets[i].pos.x - gs->player.pos.x;
+        float dy = gs->enemy_bullets[i].pos.y - gs->player.pos.y;
+        float d2 = dx * dx + dy * dy;
+        if (d2 > r2) continue;
+        float ang = atan2f(dy, dx);
+        float diff = ang - center;
+        while (diff > 3.14159f) diff -= 2.0f * 3.14159f;
+        while (diff < -3.14159f) diff += 2.0f * 3.14159f;
+        if (fabsf(diff) < gs->whip.arc * 0.5f) {
+            particles_spawn_burst(gs, gs->enemy_bullets[i].pos,
+                                  (Color){255, 200, 200, 255}, 4);
+            gs->enemy_bullets[i].active = false;
+        }
+    }
     audio_play(SFX_SHOOT);
 }
 

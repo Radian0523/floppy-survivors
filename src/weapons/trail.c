@@ -51,6 +51,7 @@ void trail_update(GameState *gs, float dt) {
                 m->life -= 0.3f;
             }
         }
+        weapon_destroy_bullets_at(gs, m->pos, r_eff);
     }
 }
 

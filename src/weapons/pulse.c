@@ -105,6 +105,11 @@ void bullet_update(GameState *gs, float dt) {
             }
         }
 
+        if (weapon_destroy_bullets_at(gs, b->pos, BULLET_RADIUS) > 0) {
+            b->active = false;
+            continue;
+        }
+
         for (int j = 0; j < MAX_ENEMIES; j++) {
             if (!gs->enemies[j].active) continue;
             if (gs->enemies[j].phased) continue;

@@ -40,6 +40,7 @@ void orbiters_update(GameState *gs, float dt) {
             }
         }
         weapon_try_hit_boss_radius(gs, op, ORBITER_RADIUS, gs->orbiters.damage);
+        weapon_destroy_bullets_at(gs, op, ORBITER_RADIUS);
     }
 }
 
