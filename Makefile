@@ -23,7 +23,8 @@ RAYLIB_INCLUDE = deps/raylib-5.5/src
 RAYLIB_MAC_LIB = deps/raylib-build/mac/libraylib.a
 RAYLIB_WIN_LIB = deps/raylib-build/win/libraylib.a
 
-.PHONY: mac mac-arm64 mac-x86_64 win win-native clean size-check run raylibwin raylibmac
+.PHONY: mac mac-arm64 mac-x86_64 win win-native clean size-check run raylibwin raylibmac \
+        tune-all tune-xp tune-sweep tune-bayes tune-quick
 
 # === macOS ===
 
@@ -105,3 +106,25 @@ run: mac
 
 clean:
 	rm -f $(TARGET) $(TARGET)_x86 $(TARGET).exe
+
+# === Tuning ===
+
+# Run the full tuning suite: build → baseline sweep → XP tune → post-XP sweep → Bayes
+tune-all: mac
+	python3 tools/tune_all.py
+
+# Fast pass for smoke-testing (no Bayes, fewer runs)
+tune-quick: mac
+	python3 tools/tune_all.py --quick --skip-bayes
+
+# Just tune the XP curve (level-up cadence)
+tune-xp: mac
+	python3 tools/tune_xp.py --target-interval 5.5
+
+# Just print the current difficulty curve
+tune-sweep: mac
+	python3 tools/sweep_difficulty.py --runs 15
+
+# Just run Bayes difficulty tune
+tune-bayes: mac
+	python3 tools/tune.py --target 180 --runs 12 --calls 40 --out tuned_difficulty.json

@@ -33,7 +33,11 @@
       "Bash(gh issue *)",
       "Bash(grep -E '\\\\.\\(json|sav|cfg\\)$')",
       "Bash(git mv *)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(make tune-quick *)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "notion-1"
+  ]
 }
