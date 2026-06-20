@@ -1,22 +1,26 @@
-"""Balance per-weapon damage so each weapon contributes a similar share in
-a bot run with all 9 weapons unlocked.
+"""Pull outlier weapons toward the pack — preserve diversity, just close the gap.
 
-Method: direct iterative scaling
+Goal is NOT "all weapons identical DPS". It's "no weapon is 5x weaker/stronger
+than the median". Weapons inside a tolerance band around the target are left
+untouched; only outliers get nudged.
+
+Method:
   1. Run N bot games with --all-weapons.
   2. Sum per-weapon damage_dealt over runs.
-  3. Target = median of weapon DPS across the 9 weapons.
-  4. For each weapon: new_damage = round(old_damage * target / weapon_dps).
+  3. Target = median (or mean/max) of weapon DPS across the 9 weapons.
+  4. For each weapon:
+       - if DPS in [target/band, target*band] → leave alone
+       - else scale damage toward target (capped by --max-step per iter)
   5. Write back to src/config.h, rebuild, repeat.
 
-After 2-3 iterations weapons converge to a similar effective DPS share.
 The bot's playstyle is held constant, so this measures "weapon effectiveness
-when the player moves like a typical human" — perfect for relative balance.
+when the player moves like a typical human" — good for relative balance.
 
 Usage:
-    python tools/tune_weapons.py                    # default 12 runs, 3 iters
-    python tools/tune_weapons.py --runs 20 --iters 5
-    python tools/tune_weapons.py --duration 180     # shorter games (faster)
-    python tools/tune_weapons.py --dry-run          # measure only, no edit
+    python tools/tune_weapons.py                          # default 12 runs, 3 iters
+    python tools/tune_weapons.py --band 1.5               # ±50% tolerance (looser)
+    python tools/tune_weapons.py --band 1.2 --iters 5     # tight; more passes
+    python tools/tune_weapons.py --dry-run                # measure only
 """
 import argparse
 import concurrent.futures
@@ -121,12 +125,21 @@ def median(values):
     return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
 
 
-def print_table(dps, damages):
-    print(f"  {'WEAPON':<11} {'DMG':>4}   {'DPS':>7}  bar")
+def print_table(dps, damages, target=None, band=None):
+    print(f"  {'WEAPON':<11} {'DMG':>4}   {'DPS':>7}  status  bar")
     max_dps = max(dps) if max(dps) > 0 else 1
+    lo, hi = (target / band, target * band) if (target and band) else (None, None)
     for (name, _), d, base in zip(WEAPON_DEFINES, dps, damages):
         bar_len = int(40 * d / max_dps)
-        print(f"  {name:<11} {base:>4}   {d:7.2f}  {'█' * bar_len}")
+        if lo is None:
+            status = "    "
+        elif d < lo:
+            status = "WEAK"
+        elif d > hi:
+            status = "STR "
+        else:
+            status = "ok  "
+        print(f"  {name:<11} {base:>4}   {d:7.2f}  {status}    {'█' * bar_len}")
 
 
 def main():
@@ -145,6 +158,11 @@ def main():
     ap.add_argument("--target", choices=["median", "mean", "max"],
                     default="median",
                     help="DPS target across weapons")
+    ap.add_argument("--band", type=float, default=1.5,
+                    help="Tolerance band: DPS in [target/band, target*band] is "
+                         "considered fine and left alone (default 1.5 = within 50pct)")
+    ap.add_argument("--max-step", type=float, default=1.8,
+                    help="Largest per-iter damage scaling (default 1.8x)")
     args = ap.parse_args()
 
     if not EXE.exists():
@@ -161,29 +179,48 @@ def main():
             rebuild()
         print(f"=== Iteration {it} ({args.runs} runs × {args.duration:.0f}s) ===")
         dps, mean_dur = measure(args.runs, args.duration, args.workers)
-        print_table(dps, current)
         if args.target == "median":
             tgt = median(dps)
         elif args.target == "mean":
             tgt = sum(dps) / len(dps)
         else:
             tgt = max(dps)
-        print(f"  target DPS = {tgt:.2f}  (mean run duration {mean_dur:.1f}s)")
+        print_table(dps, current, target=tgt, band=args.band)
+        lo, hi = tgt / args.band, tgt * args.band
+        print(f"  target DPS = {tgt:.2f}  tolerance band = [{lo:.2f}, {hi:.2f}]  "
+              f"(mean run duration {mean_dur:.1f}s)")
 
-        # Scale damage proportionally to bring DPS toward target.
+        # Only touch outliers; preserve weapons inside the band.
         new = []
+        changes = []
+        min_step = 1.0 / args.max_step
         for w, (name, _) in enumerate(WEAPON_DEFINES):
             if dps[w] < 0.01:
-                # Weapon never landed a hit — bump damage modestly
+                # Weapon never landed a hit — small bump
                 new_d = current[w] + 1
+                if new_d != current[w]:
+                    changes.append(f"{name}({current[w]}->{new_d}, no-hit)")
+            elif lo <= dps[w] <= hi:
+                # In band — leave alone
+                new_d = current[w]
             else:
                 scale = tgt / dps[w]
-                # Damp to avoid wild swings
-                scale = max(0.5, min(2.0, scale))
+                scale = max(min_step, min(args.max_step, scale))
                 new_d = max(1, round(current[w] * scale))
+                if new_d != current[w]:
+                    pct = (dps[w] / tgt - 1) * 100
+                    changes.append(
+                        f"{name}({current[w]}->{new_d}, {pct:+.0f}% off)"
+                    )
             new_d = min(new_d, args.max_damage)
             new.append(new_d)
-        print(f"  -> new damages: {dict(zip([n for n,_ in WEAPON_DEFINES], new))}")
+
+        if not changes:
+            print("  all weapons within band — converged.")
+            print()
+            break
+
+        print(f"  adjusting: {', '.join(changes)}")
         print()
 
         if args.dry_run:
@@ -197,7 +234,13 @@ def main():
     rebuild()
     print(f"=== Final ({args.runs} runs × {args.duration:.0f}s) ===")
     dps, _ = measure(args.runs, args.duration, args.workers)
-    print_table(dps, current)
+    if args.target == "median":
+        tgt = median(dps)
+    elif args.target == "mean":
+        tgt = sum(dps) / len(dps)
+    else:
+        tgt = max(dps)
+    print_table(dps, current, target=tgt, band=args.band)
     print(f"\nFinal: {dict(zip([n for n,_ in WEAPON_DEFINES], current))}")
     return 0
 
