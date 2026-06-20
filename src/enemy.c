@@ -33,6 +33,11 @@ static void init_enemy_stats(Enemy *e, EnemyType type, float time_bonus) {
     e->phase_timer = 0;
     e->phased = false;
     e->is_elite = false;
+    // Reset hit cooldown timers so a recycled slot doesn't inherit stale times.
+    // Set negative so first hit always lands regardless of current game_time.
+    for (int k = 0; k < (int)(sizeof(e->last_hit_time)/sizeof(e->last_hit_time[0])); k++) {
+        e->last_hit_time[k] = -1000.0f;
+    }
 
     switch (type) {
         case ENEMY_BIT:

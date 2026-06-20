@@ -241,6 +241,9 @@ typedef struct {
     bool phased;
     bool is_elite;
     bool active;
+    // Per-weapon last-hit timestamps for hit cooldown (persistent contact weapons).
+    // Indexed by WeaponID. Sentinel WEAPON_ID_COUNT (contact damage) bypasses cooldown.
+    float last_hit_time[16];  // sized >= WEAPON_ID_COUNT, fixed to avoid forward ref
 } Enemy;
 
 typedef struct {
@@ -318,6 +321,7 @@ typedef struct {
     float charge_cooldown;
     float spawn_timer;
     Vector2 charge_dir;
+    float last_hit_time[16];  // per-weapon hit cooldown (mirrors Enemy.last_hit_time)
 } Boss;
 
 typedef struct {

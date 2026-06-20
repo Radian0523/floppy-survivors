@@ -46,10 +46,11 @@ void trail_update(GameState *gs, float dt) {
             if (dx * dx + dy * dy <
                 (r_eff + gs->enemies[j].radius) *
                 (r_eff + gs->enemies[j].radius)) {
-                weapon_hit_enemy(gs, j, gs->trail.damage,
-                                 (Color){120, 220, 255, 255},
-                                 WEAPON_ID_TRAIL);
-                m->life -= 0.3f;
+                if (weapon_hit_enemy(gs, j, gs->trail.damage,
+                                     (Color){120, 220, 255, 255},
+                                     WEAPON_ID_TRAIL)) {
+                    m->life -= 0.3f;
+                }
             }
         }
         weapon_destroy_bullets_at(gs, m->pos, r_eff);

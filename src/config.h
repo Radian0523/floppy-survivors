@@ -31,7 +31,7 @@
 #define ORBITER_RADIUS 8.0f
 #define ORBITER_ORBIT_RADIUS 50.0f
 #define ORBITER_SPEED 3.0f
-#define ORBITER_DAMAGE 1
+#define ORBITER_DAMAGE 3
 #define MAX_ORBITERS 8
 
 // Beam
@@ -39,7 +39,7 @@
 #define BEAM_DURATION 0.8f
 #define BEAM_LENGTH 300.0f
 #define BEAM_WIDTH 8.0f
-#define BEAM_DAMAGE 2
+#define BEAM_DAMAGE 4
 #define BEAM_SWEEP_ANGLE 0.7f
 
 // Nova
@@ -70,14 +70,14 @@
 #define BOOMERANG_SPEED 280.0f
 #define BOOMERANG_RANGE 180.0f
 #define BOOMERANG_RADIUS 10.0f
-#define BOOMERANG_DAMAGE 1
+#define BOOMERANG_DAMAGE 3
 #define MAX_BOOMERANGS 8
 
 // Trail
 #define TRAIL_INTERVAL 0.12f
 #define TRAIL_LIFE 1.2f
 #define TRAIL_RADIUS 8.0f
-#define TRAIL_DAMAGE 1
+#define TRAIL_DAMAGE 2
 #define MAX_TRAIL_MARKS 64
 
 // Whip

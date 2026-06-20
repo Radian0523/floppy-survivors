@@ -15,6 +15,22 @@ const char *WEAPON_NAMES[WEAPON_ID_COUNT] = {
     "WHIP",
 };
 
+// Per-weapon hit cooldown (seconds). 0 = no cooldown (one-shot weapons whose
+// projectiles or AoE pulses can only logically hit each enemy once anyway).
+// Persistent-contact weapons need a cooldown so that 'damage = N' actually
+// means "N per hit", not "N per frame".
+static const float WEAPON_HIT_COOLDOWN[WEAPON_ID_COUNT] = {
+    0.00f,  // PULSE      — bullet destroyed on hit
+    0.50f,  // ORBITERS   — touching enemy hit once per 0.5s
+    0.40f,  // BEAM       — 0.8s pulse => 2 hits per pulse
+    0.00f,  // NOVA       — ring sweeps past once
+    0.00f,  // MINES      — explosion is 1 frame
+    0.00f,  // CHAIN      — each cast hits each enemy at most once
+    0.60f,  // BOOMERANG  — passes through; cap 1 hit per pass
+    0.40f,  // TRAIL      — standing on it ticks every 0.4s
+    0.00f,  // WHIP       — instant arc swing
+};
+
 Color enemy_color_for_type(EnemyType type) {
     switch (type) {
         case ENEMY_BIT:       return (Color){255, 50, 100, 255};
@@ -94,11 +110,21 @@ void weapon_kill_enemy(GameState *gs, int idx) {
     }
 }
 
+// Returns true if damage was actually applied (false if gated by cooldown,
+// invalid index, or enemy already dead).
 bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col,
                       WeaponID wid) {
     if (idx < 0 || idx >= MAX_ENEMIES) return false;
     Enemy *e = &gs->enemies[idx];
     if (!e->active) return false;
+    // Hit cooldown gate (persistent-contact weapons only).
+    if (wid < WEAPON_ID_COUNT) {
+        float cd = WEAPON_HIT_COOLDOWN[wid];
+        if (cd > 0 && (gs->game_time - e->last_hit_time[wid]) < cd) {
+            return false;
+        }
+        e->last_hit_time[wid] = gs->game_time;
+    }
     int dmg = base_dmg + gs->weapon_damage_bonus;
     int effective = (dmg > e->hp) ? e->hp : dmg;
     if (effective > 0 && wid < WEAPON_ID_COUNT) {
@@ -109,13 +135,19 @@ bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col,
     if (e->hp <= 0) {
         if (wid < WEAPON_ID_COUNT) gs->stats.kills_by[wid]++;
         weapon_kill_enemy(gs, idx);
-        return true;
     }
-    return false;
+    return true;
 }
 
 void weapon_hit_boss(GameState *gs, int base_dmg, WeaponID wid) {
     if (!gs->boss.active) return;
+    if (wid < WEAPON_ID_COUNT) {
+        float cd = WEAPON_HIT_COOLDOWN[wid];
+        if (cd > 0 && (gs->game_time - gs->boss.last_hit_time[wid]) < cd) {
+            return;
+        }
+        gs->boss.last_hit_time[wid] = gs->game_time;
+    }
     int dmg = base_dmg + gs->weapon_damage_bonus;
     int effective = (dmg > gs->boss.hp) ? gs->boss.hp : dmg;
     if (effective > 0 && wid < WEAPON_ID_COUNT) {

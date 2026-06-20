@@ -9,6 +9,9 @@ void boss_spawn(GameState *gs) {
     b->active = true;
     b->hp = BOSS_HP;
     b->max_hp = BOSS_HP;
+    for (int k = 0; k < (int)(sizeof(b->last_hit_time)/sizeof(b->last_hit_time[0])); k++) {
+        b->last_hit_time[k] = -1000.0f;
+    }
     audio_play(SFX_BOSS_SPAWN);
 
     int side = rand() % 4;
