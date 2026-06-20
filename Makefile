@@ -24,7 +24,7 @@ RAYLIB_MAC_LIB = deps/raylib-build/mac/libraylib.a
 RAYLIB_WIN_LIB = deps/raylib-build/win/libraylib.a
 
 .PHONY: mac mac-arm64 mac-x86_64 win win-native clean size-check run raylibwin raylibmac \
-        tune-all tune-xp tune-sweep tune-bayes tune-quick
+        tune-all tune-xp tune-sweep tune-bayes tune-quick tune-weapons
 
 # === macOS ===
 
@@ -128,3 +128,7 @@ tune-sweep: mac
 # Just run Bayes difficulty tune
 tune-bayes: mac
 	python3 tools/tune.py --target 180 --runs 12 --calls 40 --out tuned_difficulty.json
+
+# Balance per-weapon damage so each weapon contributes similar DPS
+tune-weapons: mac
+	python3 tools/tune_weapons.py --runs 12 --iters 3

@@ -88,6 +88,7 @@ static const char *opt_arg(const char *flag, const char *arg) {
 void cli_parse(int argc, char **argv, CliOptions *opt) {
     opt->headless = false;
     opt->bot = false;
+    opt->all_weapons = false;
     opt->seed = 0;
     opt->seed_set = false;
     opt->duration_override = 0;
@@ -100,6 +101,7 @@ void cli_parse(int argc, char **argv, CliOptions *opt) {
         const char *v;
         if (strcmp(a, "--headless") == 0) opt->headless = true;
         else if (strcmp(a, "--bot") == 0) opt->bot = true;
+        else if (strcmp(a, "--all-weapons") == 0) opt->all_weapons = true;
         else if ((v = opt_arg("--seed", a))) {
             opt->seed = (unsigned)strtoul(v, NULL, 10);
             opt->seed_set = true;

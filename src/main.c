@@ -304,6 +304,14 @@ static void write_stats(const GameState *gs, const char *path,
     fprintf(f, "param_player_speed_mult=%f\n", p->player_speed_mult);
     fprintf(f, "param_player_hp_mult=%f\n", p->player_hp_mult);
     fprintf(f, "param_player_invincible_mult=%f\n", p->player_invincible_mult);
+    fprintf(f, "damage_taken=%d\n", gs->stats.damage_taken);
+    fprintf(f, "gems_collected=%d\n", gs->stats.gems_collected);
+    fprintf(f, "items_collected=%d\n", gs->stats.items_collected);
+    fprintf(f, "xp_collected=%d\n", gs->stats.xp_collected);
+    for (int w = 0; w < WEAPON_ID_COUNT; w++) {
+        fprintf(f, "wpn_dmg_%d=%d\n", w, gs->stats.damage_dealt[w]);
+        fprintf(f, "wpn_kill_%d=%d\n", w, gs->stats.kills_by[w]);
+    }
     fclose(f);
 }
 
@@ -318,6 +326,16 @@ static int run_headless(const CliOptions *opt) {
     score_load(&gs.best);
     game_init(&gs);
     gs.pulse.has = true;
+    if (opt->all_weapons) {
+        orbiters_init(&gs);
+        beam_init(&gs);
+        nova_init(&gs);
+        mines_init(&gs);
+        chain_init(&gs);
+        boomerang_init(&gs);
+        trail_init(&gs);
+        whip_init(&gs);
+    }
 
     float dt = 0.033f;
     float max_dur = opt->duration_set ? opt->duration_override : GAME_DURATION;

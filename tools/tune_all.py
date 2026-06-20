@@ -3,10 +3,11 @@
 Steps (each can be skipped via flags):
   1. Build (`make mac`)
   2. Baseline sweep — show DIFFICULTY curve as-is
-  3. XP-curve tune — adjust XP_BASE_REQUIREMENT / XP_PER_LEVEL so the bot
+  3. Weapon DPS balance — equalize per-weapon DPS contribution
+  4. XP-curve tune — adjust XP_BASE_REQUIREMENT / XP_PER_LEVEL so the bot
      levels up roughly every TARGET_INTERVAL seconds
-  4. Post-XP sweep — verify difficulty curve is still sane after XP change
-  5. (optional) Bayesian difficulty tune at a given target survival
+  5. Post-tune sweep — verify difficulty curve is still sane
+  6. (optional) Bayesian difficulty tune at a given target survival
 
 Usage:
     python tools/tune_all.py                    # full default pass
@@ -48,41 +49,50 @@ def main():
     ap.add_argument("--bayes-runs", type=int, default=10)
     ap.add_argument("--skip-build", action="store_true")
     ap.add_argument("--skip-sweep", action="store_true")
+    ap.add_argument("--skip-weapons", action="store_true")
     ap.add_argument("--skip-xp", action="store_true")
     ap.add_argument("--skip-bayes", action="store_true",
                     help="Skip the slow Bayesian difficulty step")
+    ap.add_argument("--weapon-iters", type=int, default=3)
     args = ap.parse_args()
 
     if args.quick:
         args.runs = 8
         args.bayes_calls = 12
         args.bayes_runs = 6
+        args.weapon_iters = 2
 
     t0 = time.time()
 
     if not args.skip_build:
-        section("[1/5] Build")
+        section("[1/6] Build")
         if sh(["make", "mac"]).returncode != 0:
             print("Build failed."); return 1
 
     if not args.skip_sweep:
-        section("[2/5] Baseline difficulty sweep")
+        section("[2/6] Baseline difficulty sweep")
         sh(["python3", str(HERE / "sweep_difficulty.py"),
             "--runs", str(args.runs)])
 
+    if not args.skip_weapons:
+        section(f"[3/6] Weapon DPS balance ({args.weapon_iters} iters)")
+        sh(["python3", str(HERE / "tune_weapons.py"),
+            "--runs", str(args.runs),
+            "--iters", str(args.weapon_iters)])
+
     if not args.skip_xp:
-        section(f"[3/5] XP curve tune (target ~{args.target_interval}s/level-up)")
+        section(f"[4/6] XP curve tune (target ~{args.target_interval}s/level-up)")
         sh(["python3", str(HERE / "tune_xp.py"),
             "--target-interval", str(args.target_interval),
             "--runs", str(args.runs)])
 
-    if not args.skip_sweep and not args.skip_xp:
-        section("[4/5] Post-XP difficulty sweep")
+    if not args.skip_sweep:
+        section("[5/6] Post-tune difficulty sweep")
         sh(["python3", str(HERE / "sweep_difficulty.py"),
             "--runs", str(args.runs)])
 
     if not args.skip_bayes:
-        section(f"[5/5] Bayesian difficulty tune (target {args.bayes_target}s)")
+        section(f"[6/6] Bayesian difficulty tune (target {args.bayes_target}s)")
         out_path = HERE.parent / "tuned_difficulty.json"
         sh(["python3", str(HERE / "tune.py"),
             "--target", str(args.bayes_target),

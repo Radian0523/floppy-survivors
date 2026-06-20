@@ -17,6 +17,7 @@ typedef struct {
 typedef struct {
     bool headless;
     bool bot;
+    bool all_weapons;     // grant all 9 weapons at start (for per-weapon DPS tuning)
     unsigned seed;
     bool seed_set;
     float duration_override;
