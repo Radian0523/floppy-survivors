@@ -461,43 +461,135 @@ void scene_settings_draw(const GameState *gs) {
     DrawText(hint, (sw - hw) / 2, sh - 60, 14, (Color){150, 200, 220, 255});
 }
 
+// Draw a stylized neon floppy disk centered at (cx, cy) with radius r
+static void draw_floppy_disk(float cx, float cy, float r, float spin, float alpha) {
+    Color shell_line = {120, 200, 255, (unsigned char)(255 * alpha)};
+    Color shell_fill = {18, 22, 38, (unsigned char)(220 * alpha)};
+    Color metal_line = {200, 220, 255, (unsigned char)(220 * alpha)};
+    Color label_line = {255, 220, 100, (unsigned char)(220 * alpha)};
+    Color slit_col   = {30, 35, 50, (unsigned char)(255 * alpha)};
+
+    float w = r * 1.8f;
+    float h = r * 1.8f;
+    float x = cx - w * 0.5f;
+    float y = cy - h * 0.5f;
+
+    // Shell body
+    DrawRectangle((int)x, (int)y, (int)w, (int)h, shell_fill);
+    DrawRectangleLines((int)x, (int)y, (int)w, (int)h, shell_line);
+
+    // Metal shutter top
+    float shutter_w = w * 0.55f;
+    float shutter_h = h * 0.32f;
+    float shutter_x = cx - shutter_w * 0.5f;
+    float shutter_y = y + h * 0.05f;
+    DrawRectangle((int)shutter_x, (int)shutter_y,
+                  (int)shutter_w, (int)shutter_h,
+                  (Color){25, 30, 50, (unsigned char)(255 * alpha)});
+    DrawRectangleLines((int)shutter_x, (int)shutter_y,
+                       (int)shutter_w, (int)shutter_h, metal_line);
+    // Shutter slit
+    DrawRectangle((int)(shutter_x + shutter_w * 0.3f),
+                  (int)(shutter_y + shutter_h * 0.2f),
+                  (int)(shutter_w * 0.4f), (int)(shutter_h * 0.6f),
+                  slit_col);
+
+    // Label area (bottom)
+    float lab_x = x + w * 0.12f;
+    float lab_y = y + h * 0.5f;
+    float lab_w = w * 0.76f;
+    float lab_h = h * 0.42f;
+    DrawRectangle((int)lab_x, (int)lab_y, (int)lab_w, (int)lab_h,
+                  (Color){10, 14, 24, (unsigned char)(200 * alpha)});
+    DrawRectangleLines((int)lab_x, (int)lab_y, (int)lab_w, (int)lab_h, label_line);
+    // Label lines (data sectors)
+    for (int i = 0; i < 3; i++) {
+        float ly = lab_y + lab_h * (0.25f + i * 0.22f);
+        DrawLine((int)(lab_x + lab_w * 0.1f), (int)ly,
+                 (int)(lab_x + lab_w * 0.9f), (int)ly,
+                 (Color){label_line.r, label_line.g, label_line.b,
+                         (unsigned char)(120 * alpha)});
+    }
+
+    // Spinning hub indicator (faint)
+    float hub_r = r * 0.18f;
+    Vector2 hub_c = {cx, shutter_y + shutter_h * 0.5f};
+    for (int i = 0; i < 4; i++) {
+        float a = spin + i * 1.5707f;
+        Vector2 p1 = {hub_c.x + cosf(a) * hub_r * 0.4f,
+                      hub_c.y + sinf(a) * hub_r * 0.4f};
+        Vector2 p2 = {hub_c.x + cosf(a) * hub_r * 0.9f,
+                      hub_c.y + sinf(a) * hub_r * 0.9f};
+        DrawLineEx(p1, p2, 2.0f,
+                   (Color){180, 220, 255, (unsigned char)(180 * alpha)});
+    }
+
+    // Corner cut (top-right) for floppy authenticity
+    float ccx = x + w;
+    float ccy = y;
+    float cc = r * 0.2f;
+    DrawTriangle((Vector2){ccx - cc, ccy},
+                 (Vector2){ccx, ccy + cc},
+                 (Vector2){ccx, ccy},
+                 (Color){0, 0, 0, (unsigned char)(255 * alpha)});
+    DrawLineEx((Vector2){ccx - cc, ccy},
+               (Vector2){ccx, ccy + cc},
+               1.5f, shell_line);
+}
+
+// Logo with neon glow (multiple offset layers)
+static void draw_logo_glow(const char *text, int x, int y, int size, float pulse) {
+    // Outer cyan/magenta glow (chromatic aberration style)
+    DrawText(text, x + 4, y + 4, size, (Color){255, 0, 120, 80});
+    DrawText(text, x - 4, y - 4, size, (Color){0, 220, 255, 80});
+    DrawText(text, x + 2, y + 2, size, (Color){255, 60, 160, 110});
+    DrawText(text, x - 2, y - 2, size, (Color){80, 240, 255, 110});
+    // Core white text
+    DrawText(text, x, y, size,
+             (Color){255, 255, 255, (unsigned char)(255 * pulse)});
+}
+
 void scene_title_draw(const GameState *gs) {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    float pulse = 0.7f + 0.3f * sinf(gs->scene_timer * 2.0f);
+    float pulse = 0.78f + 0.22f * sinf(gs->scene_timer * 2.0f);
+    float spin = gs->scene_timer * 4.0f;
 
+    // === Floppy disk visual ===
+    float disk_r = 36;
+    float disk_y = sh * 0.18f;
+    draw_floppy_disk(sw * 0.5f, disk_y, disk_r, spin, 0.95f);
+
+    // === Logo ===
     const char *title = "DISK SURVIVOR";
-    int title_size = 64;
+    int title_size = 56;
     int tw = MeasureText(title, title_size);
     int tx = (sw - tw) / 2;
-    int ty = sh / 2 - 100;
-
-    DrawText(title, tx + 3, ty + 3, title_size, (Color){255, 0, 100, 100});
-    DrawText(title, tx - 3, ty - 3, title_size, (Color){0, 255, 255, 100});
-    DrawText(title, tx, ty, title_size,
-        (Color){255, 255, 255, (unsigned char)(255 * pulse)});
+    int ty = (int)(disk_y + disk_r + 28);
+    draw_logo_glow(title, tx, ty, title_size, pulse);
 
     const char *subtitle = "Survive 5 minutes against corrupted data";
-    int sub_size = 16;
+    int sub_size = 14;
     int sw_text = MeasureText(subtitle, sub_size);
-    DrawText(subtitle, (sw - sw_text) / 2, ty + title_size + 10, sub_size,
-        (Color){180, 180, 200, 200});
+    DrawText(subtitle, (sw - sw_text) / 2, ty + title_size + 6, sub_size,
+        (Color){160, 170, 200, 220});
 
-    // Difficulty selector
+    // Difficulty selector (just below subtitle)
+    int diff_block_y = ty + title_size + 32;
     int idx = find_difficulty_index(gs->difficulty);
     const char *diff_label = "DIFFICULTY";
-    int dl_size = 14;
+    int dl_size = 12;
     int dl_w = MeasureText(diff_label, dl_size);
-    DrawText(diff_label, (sw - dl_w) / 2, sh / 2 + 30, dl_size,
+    DrawText(diff_label, (sw - dl_w) / 2, diff_block_y, dl_size,
         (Color){160, 160, 180, 255});
 
-    int box_w = 80;
-    int gap = 12;
+    int box_w = 76;
+    int gap = 10;
     int total_w = DIFFICULTY_COUNT * box_w + (DIFFICULTY_COUNT - 1) * gap;
     int start_x = (sw - total_w) / 2;
-    int box_y = sh / 2 + 50;
-    int box_h = 32;
+    int box_y = diff_block_y + 18;
+    int box_h = 28;
 
     for (int i = 0; i < DIFFICULTY_COUNT; i++) {
         int x = start_x + i * (box_w + gap);
@@ -528,32 +620,74 @@ void scene_title_draw(const GameState *gs) {
             (Color){100, 255, 255, 255});
     }
 
-    const char *controls = "H: How to Play  -  S: Settings";
-    int c_size = 14;
-    int cw = MeasureText(controls, c_size);
-    DrawText(controls, (sw - cw) / 2, sh - 60, c_size, (Color){150, 150, 170, 200});
-
-    const char *credit = "1.44MB GAME_DEV CONTEST 2026";
-    int cr_size = 12;
-    int crw = MeasureText(credit, cr_size);
-    DrawText(credit, (sw - crw) / 2, sh - 30, cr_size, (Color){100, 100, 120, 200});
-
+    // === BEST card (only if there's at least one run) ===
     if (gs->best.total_games > 0) {
-        char buf[96];
+        int card_w = 320;
+        int card_h = 70;
+        int card_x = (sw - card_w) / 2;
+        int card_y = box_y + box_h + 60;
+
+        DrawRectangle(card_x, card_y, card_w, card_h,
+                      (Color){12, 16, 28, 220});
+        DrawRectangleLines(card_x, card_y, card_w, card_h,
+                           (Color){80, 140, 200, 200});
+
+        const char *hdr = "BEST RECORD";
+        int hdr_size = 11;
+        int hw = MeasureText(hdr, hdr_size);
+        DrawText(hdr, card_x + (card_w - hw) / 2, card_y + 7, hdr_size,
+                 (Color){120, 180, 220, 220});
+
+        char buf[64];
+        int col_w = card_w / 3;
+        int val_y = card_y + 26;
+        int lbl_y = card_y + 50;
+        Color val_col = {240, 245, 255, 255};
+        Color lbl_col = {140, 150, 170, 200};
+        int val_size = 18;
+        int lbl_size = 10;
+
         int m = (int)gs->best.best_time / 60;
         int s = (int)gs->best.best_time % 60;
-        sprintf(buf, "BEST  %d:%02d  -  KILLS %d  -  LV %d",
-            m, s, gs->best.best_kills, gs->best.best_level);
-        int bs = 14;
-        int bw = MeasureText(buf, bs);
-        DrawText(buf, (sw - bw) / 2, sh / 2 + 130, bs, (Color){180, 200, 220, 220});
+        sprintf(buf, "%d:%02d", m, s);
+        int bw = MeasureText(buf, val_size);
+        DrawText(buf, card_x + col_w * 0 + (col_w - bw) / 2, val_y, val_size, val_col);
+        int lw = MeasureText("TIME", lbl_size);
+        DrawText("TIME", card_x + col_w * 0 + (col_w - lw) / 2, lbl_y, lbl_size, lbl_col);
+
+        sprintf(buf, "%d", gs->best.best_kills);
+        bw = MeasureText(buf, val_size);
+        DrawText(buf, card_x + col_w * 1 + (col_w - bw) / 2, val_y, val_size,
+                 (Color){255, 200, 100, 255});
+        lw = MeasureText("KILLS", lbl_size);
+        DrawText("KILLS", card_x + col_w * 1 + (col_w - lw) / 2, lbl_y, lbl_size, lbl_col);
+
+        sprintf(buf, "%d", gs->best.best_level);
+        bw = MeasureText(buf, val_size);
+        DrawText(buf, card_x + col_w * 2 + (col_w - bw) / 2, val_y, val_size,
+                 (Color){100, 255, 255, 255});
+        lw = MeasureText("LEVEL", lbl_size);
+        DrawText("LEVEL", card_x + col_w * 2 + (col_w - lw) / 2, lbl_y, lbl_size, lbl_col);
+
         if (gs->best.boss_defeats > 0) {
             char bd[48];
             sprintf(bd, "FORMAT DEFEATED x%d", gs->best.boss_defeats);
-            int bdw = MeasureText(bd, bs);
-            DrawText(bd, (sw - bdw) / 2, sh / 2 + 152, bs, (Color){255, 200, 100, 220});
+            int bdw = MeasureText(bd, 12);
+            DrawText(bd, (sw - bdw) / 2, card_y + card_h + 6, 12,
+                     (Color){255, 200, 100, 220});
         }
     }
+
+    // === Bottom controls & credit ===
+    const char *controls = "H: How to Play  ·  S: Settings";
+    int c_size = 13;
+    int cw = MeasureText(controls, c_size);
+    DrawText(controls, (sw - cw) / 2, sh - 52, c_size, (Color){150, 150, 170, 200});
+
+    const char *credit = "1.44MB GAME_DEV CONTEST 2026";
+    int cr_size = 11;
+    int crw = MeasureText(credit, cr_size);
+    DrawText(credit, (sw - crw) / 2, sh - 28, cr_size, (Color){100, 100, 120, 200});
 }
 
 static const char *weapon_names[STARTING_WEAPON_COUNT] = {

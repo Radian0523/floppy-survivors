@@ -15,6 +15,7 @@ static unsigned long sample_pos = 0;
 // Pattern is in 16th notes; tempo controls playback rate.
 // Notes: A4=69, C5=72, etc.
 
+// Drum hit codes: 0=none, 1=kick, 2=snare, 3=hat (short noise burst)
 static const int title_lead[] = {
     69, 0, 72, 0, 76, 0, 72, 0, 74, 0, 72, 0, 69, 0, 0, 0,
     71, 0, 74, 0, 77, 0, 74, 0, 76, 0, 74, 0, 71, 0, 0, 0
@@ -22,6 +23,10 @@ static const int title_lead[] = {
 static const int title_bass[] = {
     33, 0, 0, 0, 33, 0, 0, 0, 33, 0, 0, 0, 33, 0, 0, 0,
     35, 0, 0, 0, 35, 0, 0, 0, 35, 0, 0, 0, 35, 0, 0, 0
+};
+static const int title_drum[] = {
+    1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 3, 0,
+    1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 3, 0
 };
 
 static const int game_lead[] = {
@@ -32,6 +37,24 @@ static const int game_bass[] = {
     45, 0, 45, 0, 45, 0, 45, 0, 43, 0, 43, 0, 43, 0, 43, 0,
     41, 0, 41, 0, 41, 0, 41, 0, 40, 0, 40, 0, 40, 0, 40, 0
 };
+static const int game_drum[] = {
+    1, 0, 3, 0, 2, 0, 3, 0, 1, 0, 3, 0, 2, 0, 3, 3,
+    1, 0, 3, 0, 2, 0, 3, 0, 1, 0, 3, 0, 2, 0, 3, 3
+};
+
+// Late-game: faster, denser, more urgent
+static const int game_late_lead[] = {
+    69, 72, 76, 79, 76, 72, 69, 72, 71, 74, 77, 81, 77, 74, 71, 74,
+    72, 76, 79, 84, 79, 76, 72, 76, 74, 77, 81, 86, 81, 77, 74, 77
+};
+static const int game_late_bass[] = {
+    45, 45, 0, 45, 43, 43, 0, 43, 41, 41, 0, 41, 40, 40, 0, 40,
+    45, 45, 0, 45, 43, 43, 0, 43, 41, 41, 0, 41, 40, 40, 38, 38
+};
+static const int game_late_drum[] = {
+    1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 1, 3,
+    1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 2, 1
+};
 
 static const int boss_lead[] = {
     72, 75, 79, 75, 72, 75, 79, 82, 80, 77, 73, 70, 73, 77, 80, 82,
@@ -41,20 +64,26 @@ static const int boss_bass[] = {
     36, 36, 36, 36, 36, 36, 36, 36, 39, 39, 39, 39, 39, 39, 39, 39,
     34, 34, 34, 34, 34, 34, 34, 34, 38, 38, 38, 38, 38, 38, 38, 38
 };
+static const int boss_drum[] = {
+    1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 2, 1,
+    1, 3, 1, 3, 2, 3, 1, 3, 1, 3, 1, 3, 2, 3, 2, 1
+};
 
 typedef struct {
     const int *lead;
     const int *bass;
+    const int *drum;
     int length;
     int bpm;
     float gain;
 } Track;
 
 static Track tracks[BGM_COUNT] = {
-    {0, 0, 0, 0, 0},                                 // BGM_NONE
-    {title_lead, title_bass, 32, 90, 0.10f},         // BGM_TITLE
-    {game_lead, game_bass, 32, 130, 0.10f},          // BGM_GAME
-    {boss_lead, boss_bass, 32, 160, 0.13f},          // BGM_BOSS
+    {0, 0, 0, 0, 0, 0},                                              // BGM_NONE
+    {title_lead, title_bass, title_drum, 32, 90, 0.10f},             // BGM_TITLE
+    {game_lead, game_bass, game_drum, 32, 130, 0.10f},               // BGM_GAME
+    {game_late_lead, game_late_bass, game_late_drum, 32, 145, 0.11f},// BGM_GAME_LATE
+    {boss_lead, boss_bass, boss_drum, 32, 160, 0.13f},               // BGM_BOSS
 };
 
 static float midi_to_freq(int note) {
@@ -69,6 +98,39 @@ static float square_wave(float phase) {
 static float triangle_wave(float phase) {
     if (phase < 0.5f) return -1.0f + 4.0f * phase;
     return 3.0f - 4.0f * phase;
+}
+
+// Simple LCG noise (deterministic per-sample, no state)
+static float noise_at(unsigned long n) {
+    n = n * 1103515245UL + 12345UL;
+    return ((float)((n >> 16) & 0x7FFF) / 16383.5f) - 1.0f;
+}
+
+// Kick: low sine sweep + decay (typical analog kick)
+static float drum_kick(float t) {
+    if (t > 0.18f) return 0;
+    float env = 1.0f - t / 0.18f;
+    float freq = 120.0f - 80.0f * (t / 0.18f);  // sweep down
+    float phase = fmodf(t * freq, 1.0f);
+    float s = sinf(phase * 6.2831853f);
+    return s * env * env;
+}
+
+// Snare: noise burst with tonal body
+static float drum_snare(float t, unsigned long sample_n) {
+    if (t > 0.14f) return 0;
+    float env = 1.0f - t / 0.14f;
+    float n = noise_at(sample_n);
+    float tone = sinf(t * 380.0f * 6.2831853f) * 0.3f;
+    return (n * 0.8f + tone) * env * env;
+}
+
+// Hi-hat: short noise with high-pass-ish feel
+static float drum_hat(float t, unsigned long sample_n) {
+    if (t > 0.06f) return 0;
+    float env = 1.0f - t / 0.06f;
+    float n = noise_at(sample_n) - noise_at(sample_n - 1) * 0.5f;
+    return n * env * env;
 }
 
 static void audio_callback(void *buffer, unsigned int frames) {
@@ -113,6 +175,20 @@ static void audio_callback(void *buffer, unsigned int frames) {
             float phase = fmodf(time * freq, 1.0f);
             float bass_env = 1.0f - step_progress * 0.3f;
             sample += triangle_wave(phase) * 0.55f * bass_env;
+        }
+
+        // Drum voice
+        if (t->drum) {
+            int drum = t->drum[step];
+            float drum_sample = 0;
+            unsigned long sn = sample_pos + i;
+            switch (drum) {
+                case 1: drum_sample = drum_kick(step_pos) * 0.95f; break;
+                case 2: drum_sample = drum_snare(step_pos, sn) * 0.55f; break;
+                case 3: drum_sample = drum_hat(step_pos, sn) * 0.30f; break;
+                default: break;
+            }
+            sample += drum_sample;
         }
 
         sample *= t->gain;

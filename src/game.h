@@ -531,6 +531,7 @@ typedef enum {
     BGM_NONE,
     BGM_TITLE,
     BGM_GAME,
+    BGM_GAME_LATE,
     BGM_BOSS,
     BGM_COUNT
 } BgmId;

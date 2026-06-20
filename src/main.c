@@ -390,10 +390,14 @@ int main(int argc, char **argv) {
                 bgm_play(BGM_TITLE);
                 scene_weapon_select_update(&gs, dt);
                 break;
-            case SCENE_GAME:
-                bgm_play(gs.boss.active ? BGM_BOSS : BGM_GAME);
+            case SCENE_GAME: {
+                BgmId track = BGM_GAME;
+                if (gs.boss.active) track = BGM_BOSS;
+                else if (gs.game_time >= 180.0f) track = BGM_GAME_LATE;
+                bgm_play(track);
                 update_game(&gs, dt);
                 break;
+            }
             case SCENE_RESULT:
                 bgm_play(BGM_TITLE);
                 scene_result_update(&gs, dt);
