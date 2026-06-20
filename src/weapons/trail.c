@@ -47,7 +47,8 @@ void trail_update(GameState *gs, float dt) {
                 (r_eff + gs->enemies[j].radius) *
                 (r_eff + gs->enemies[j].radius)) {
                 weapon_hit_enemy(gs, j, gs->trail.damage,
-                                 (Color){120, 220, 255, 255});
+                                 (Color){120, 220, 255, 255},
+                                 WEAPON_ID_TRAIL);
                 m->life -= 0.3f;
             }
         }

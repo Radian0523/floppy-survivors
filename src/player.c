@@ -59,6 +59,7 @@ void player_take_damage(GameState *gs, int damage) {
     if (scaled < 1) scaled = 1;
     p->hp -= scaled;
     if (p->hp < 0) p->hp = 0;
+    gs->stats.damage_taken += scaled;
     p->invincible_timer = PLAYER_INVINCIBLE_TIME * g_params.player_invincible_mult;
     audio_play(SFX_PLAYER_HIT);
     particles_spawn_burst(gs, p->pos, (Color){255, 255, 255, 255}, 16);

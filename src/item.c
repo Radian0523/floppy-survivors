@@ -95,6 +95,7 @@ void items_update(GameState *gs, float dt) {
         if (dist < PLAYER_RADIUS + ITEM_RADIUS) {
             apply_item(gs, it->type);
             it->active = false;
+            gs->stats.items_collected++;
         }
     }
 }

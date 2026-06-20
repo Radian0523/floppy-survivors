@@ -30,6 +30,30 @@ typedef enum {
 } StartingWeapon;
 
 typedef enum {
+    WEAPON_ID_PULSE,
+    WEAPON_ID_ORBITERS,
+    WEAPON_ID_BEAM,
+    WEAPON_ID_NOVA,
+    WEAPON_ID_MINES,
+    WEAPON_ID_CHAIN,
+    WEAPON_ID_BOOMERANG,
+    WEAPON_ID_TRAIL,
+    WEAPON_ID_WHIP,
+    WEAPON_ID_COUNT
+} WeaponID;
+
+extern const char *WEAPON_NAMES[WEAPON_ID_COUNT];
+
+typedef struct {
+    int damage_dealt[WEAPON_ID_COUNT];
+    int kills_by[WEAPON_ID_COUNT];
+    int damage_taken;
+    int gems_collected;
+    int items_collected;
+    int xp_collected;
+} GameStats;
+
+typedef enum {
     // Base upgrades
     UPGRADE_RAPID_FIRE,
     UPGRADE_MULTI_SHOT,
@@ -339,6 +363,7 @@ typedef struct {
     bool victory;
 
     int kills;
+    GameStats stats;
 
     Boss boss;
     bool boss_defeated;

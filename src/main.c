@@ -1,6 +1,7 @@
 #include "game.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 static const char *bloomShaderCode =
@@ -73,6 +74,7 @@ static void game_init(GameState *gs) {
     gs->game_over = false;
     gs->victory = false;
     gs->kills = 0;
+    memset(&gs->stats, 0, sizeof(gs->stats));
 
     gs->boss.active = false;
     gs->boss_defeated = false;

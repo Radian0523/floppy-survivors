@@ -777,48 +777,39 @@ void scene_result_update(GameState *gs, float dt) {
     }
 }
 
+// Per-weapon row colors (matches in-game weapon hues)
+static Color weapon_row_color(WeaponID w) {
+    switch (w) {
+        case WEAPON_ID_PULSE:     return (Color){255, 220, 100, 255};
+        case WEAPON_ID_ORBITERS:  return (Color){120, 220, 255, 255};
+        case WEAPON_ID_BEAM:      return (Color){180, 200, 255, 255};
+        case WEAPON_ID_NOVA:      return (Color){150, 200, 255, 255};
+        case WEAPON_ID_MINES:     return (Color){255, 220, 120, 255};
+        case WEAPON_ID_CHAIN:     return (Color){200, 240, 255, 255};
+        case WEAPON_ID_BOOMERANG: return (Color){150, 255, 180, 255};
+        case WEAPON_ID_TRAIL:     return (Color){120, 220, 255, 255};
+        case WEAPON_ID_WHIP:      return (Color){220, 220, 255, 255};
+        default:                  return (Color){200, 200, 220, 255};
+    }
+}
+
 void scene_result_draw(const GameState *gs) {
     int sw = GetScreenWidth();
     int sh = GetScreenHeight();
 
-    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 0, 200});
+    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 0, 220});
 
+    // === Header ===
     const char *msg = gs->victory ? "DISK RECOVERED!" : "DATA CORRUPTED";
     Color msg_color = gs->victory
         ? (Color){100, 255, 100, 255}
         : (Color){255, 100, 100, 255};
-    int msg_size = 48;
+    int msg_size = 36;
     int mw = MeasureText(msg, msg_size);
-    DrawText(msg, (sw - mw) / 2, sh / 2 - 140, msg_size, msg_color);
+    int top_y = 30;
+    DrawText(msg, (sw - mw) / 2, top_y, msg_size, msg_color);
 
-    char buf[64];
-    int line_size = 22;
-    int line_y = sh / 2 - 60;
-    int line_gap = 32;
-
-    int minutes = (int)gs->game_time / 60;
-    int seconds = (int)gs->game_time % 60;
-    sprintf(buf, "TIME      %d:%02d", minutes, seconds);
-    int bw = MeasureText(buf, line_size);
-    DrawText(buf, (sw - bw) / 2, line_y, line_size, (Color){200, 200, 220, 255});
-
-    sprintf(buf, "LEVEL     %d", gs->level);
-    bw = MeasureText(buf, line_size);
-    DrawText(buf, (sw - bw) / 2, line_y + line_gap, line_size, (Color){100, 255, 255, 255});
-
-    sprintf(buf, "KILLS     %d", gs->kills);
-    bw = MeasureText(buf, line_size);
-    DrawText(buf, (sw - bw) / 2, line_y + line_gap * 2, line_size, (Color){255, 200, 100, 255});
-
-    if (gs->boss_defeated) {
-        const char *boss_msg = "* FORMAT DEFEATED *";
-        int bms = 18;
-        int bmw = MeasureText(boss_msg, bms);
-        DrawText(boss_msg, (sw - bmw) / 2, line_y + line_gap * 3 + 10, bms,
-            (Color){255, 200, 50, 255});
-    }
-
-    int badge_y = line_y + line_gap * 4 + 16;
+    // === Score badges ===
     float blink_t = sinf(gs->scene_timer * 5.0f);
     if (blink_t > -0.3f && gs->last_score_flags) {
         const char *labels[4] = {"NEW TIME", "NEW KILLS", "NEW LEVEL", "FIRST CLEAR"};
@@ -828,34 +819,152 @@ void scene_result_draw(const GameState *gs) {
             {100, 200, 255, 255},
             {255, 100, 255, 255}
         };
-        int count = 0;
-        int total_w = 0;
-        int label_idx[4];
-        int label_w[4];
+        int total_w = 0, count = 0, lw[4], li[4];
         for (int i = 0; i < 4; i++) {
             if (gs->last_score_flags & (1 << i)) {
-                label_idx[count] = i;
-                label_w[count] = MeasureText(labels[i], 16);
-                total_w += label_w[count];
+                li[count] = i;
+                lw[count] = MeasureText(labels[i], 14);
+                total_w += lw[count];
                 count++;
             }
         }
-        total_w += (count - 1) * 16;
+        total_w += (count - 1) * 14;
         int x = (sw - total_w) / 2;
         for (int i = 0; i < count; i++) {
-            int idx = label_idx[i];
-            DrawText(labels[idx], x, badge_y, 16, colors[idx]);
-            x += label_w[i] + 16;
+            DrawText(labels[li[i]], x, top_y + msg_size + 6, 14, colors[li[i]]);
+            x += lw[i] + 14;
         }
     }
 
+    // === Summary stats (top row) ===
+    char buf[96];
+    int stat_y = top_y + msg_size + 32;
+    int stat_size = 16;
+
+    int total_dmg = 0;
+    for (int i = 0; i < WEAPON_ID_COUNT; i++) total_dmg += gs->stats.damage_dealt[i];
+    int minutes = (int)gs->game_time / 60;
+    int seconds = (int)gs->game_time % 60;
+
+    // Two-column compact summary
+    int col_w = sw / 2 - 40;
+    int col1_x = 40;
+    int col2_x = sw / 2 + 20;
+    int row_h = 22;
+
+    Color label_col = (Color){140, 140, 160, 255};
+    Color value_col = (Color){240, 240, 255, 255};
+
+    // Helper: draw label left, value right-aligned within a column
+    Color level_col  = (Color){100, 255, 255, 255};
+    Color kills_col  = (Color){255, 200, 100, 255};
+    Color dps_col    = (Color){255, 200, 100, 255};
+    Color taken_col  = (Color){255, 130, 130, 255};
+    Color gems_col   = (Color){150, 255, 180, 255};
+
+    int vw;
+    DrawText("TIME", col1_x, stat_y + 0 * row_h, stat_size, label_col);
+    sprintf(buf, "%d:%02d", minutes, seconds);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col1_x + col_w - vw, stat_y + 0 * row_h, stat_size, value_col);
+
+    DrawText("LEVEL", col1_x, stat_y + 1 * row_h, stat_size, label_col);
+    sprintf(buf, "%d", gs->level);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col1_x + col_w - vw, stat_y + 1 * row_h, stat_size, level_col);
+
+    DrawText("KILLS", col1_x, stat_y + 2 * row_h, stat_size, label_col);
+    sprintf(buf, "%d", gs->kills);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col1_x + col_w - vw, stat_y + 2 * row_h, stat_size, kills_col);
+
+    DrawText("TOTAL DMG", col2_x, stat_y + 0 * row_h, stat_size, label_col);
+    sprintf(buf, "%d", total_dmg);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col2_x + col_w - vw, stat_y + 0 * row_h, stat_size, dps_col);
+
+    DrawText("DAMAGE TAKEN", col2_x, stat_y + 1 * row_h, stat_size, label_col);
+    sprintf(buf, "%d", gs->stats.damage_taken);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col2_x + col_w - vw, stat_y + 1 * row_h, stat_size, taken_col);
+
+    DrawText("GEMS / ITEMS", col2_x, stat_y + 2 * row_h, stat_size, label_col);
+    sprintf(buf, "%d / %d", gs->stats.gems_collected, gs->stats.items_collected);
+    vw = MeasureText(buf, stat_size);
+    DrawText(buf, col2_x + col_w - vw, stat_y + 2 * row_h, stat_size, gems_col);
+
+    if (gs->boss_defeated) {
+        const char *bm = "* FORMAT DEFEATED *";
+        int bms = 14;
+        int bmw = MeasureText(bm, bms);
+        DrawText(bm, (sw - bmw) / 2, stat_y + row_h * 3 + 6, bms,
+            (Color){255, 200, 50, 255});
+    }
+
+    // === Per-weapon DPS breakdown ===
+    int bars_y = stat_y + row_h * 3 + 28;
+    const char *bars_title = "WEAPONS";
+    DrawText(bars_title, col1_x, bars_y, stat_size, label_col);
+    const char *bars_h1 = "DPS";
+    const char *bars_h2 = "%";
+    int h1w = MeasureText(bars_h1, stat_size);
+    int h2w = MeasureText(bars_h2, stat_size);
+    int total_col_x = sw - 40 - 60 - h2w - 12;
+    DrawText(bars_h1, total_col_x - h1w, bars_y, stat_size, label_col);
+    DrawText(bars_h2, sw - 40 - h2w, bars_y, stat_size, label_col);
+
+    // Sort indices by damage_dealt descending
+    int order[WEAPON_ID_COUNT];
+    for (int i = 0; i < WEAPON_ID_COUNT; i++) order[i] = i;
+    for (int i = 0; i < WEAPON_ID_COUNT - 1; i++) {
+        for (int j = i + 1; j < WEAPON_ID_COUNT; j++) {
+            if (gs->stats.damage_dealt[order[j]] > gs->stats.damage_dealt[order[i]]) {
+                int t = order[i]; order[i] = order[j]; order[j] = t;
+            }
+        }
+    }
+
+    int row_y = bars_y + 24;
+    int row_step = 18;
+    int name_x = col1_x;
+    int bar_x = col1_x + 90;
+    int bar_max_w = total_col_x - h1w - bar_x - 16;
+
+    float time_div = (gs->game_time > 0.5f) ? gs->game_time : 1.0f;
+    for (int rank = 0; rank < WEAPON_ID_COUNT; rank++) {
+        int w = order[rank];
+        int dmg = gs->stats.damage_dealt[w];
+        if (dmg <= 0) continue;
+        Color c = weapon_row_color((WeaponID)w);
+        int y = row_y + rank * row_step;
+
+        DrawText(WEAPON_NAMES[w], name_x, y, 13, c);
+
+        float frac = total_dmg > 0 ? (float)dmg / total_dmg : 0;
+        int bw = (int)(bar_max_w * frac);
+        if (bw < 1) bw = 1;
+        DrawRectangle(bar_x, y + 2, bar_max_w, 10, (Color){30, 30, 40, 255});
+        DrawRectangle(bar_x, y + 2, bw, 10, (Color){c.r, c.g, c.b, 200});
+
+        float weapon_dps = dmg / time_div;
+        sprintf(buf, "%.1f", weapon_dps);
+        int dw = MeasureText(buf, 13);
+        DrawText(buf, total_col_x - dw, y, 13, value_col);
+
+        sprintf(buf, "%d%%", (int)(frac * 100 + 0.5f));
+        int pw = MeasureText(buf, 13);
+        DrawText(buf, sw - 40 - pw, y, 13, label_col);
+    }
+
+    // === Prompt ===
     if (gs->scene_timer >= 0.5f) {
         float blink = sinf(gs->scene_timer * 3.0f);
         if (blink > -0.3f) {
             const char *prompt = "PRESS SPACE to return to TITLE";
-            int ps = 16;
+            int ps = 14;
             int pw = MeasureText(prompt, ps);
-            DrawText(prompt, (sw - pw) / 2, sh - 80, ps, (Color){180, 180, 200, 255});
+            DrawText(prompt, (sw - pw) / 2, sh - 32, ps, (Color){180, 180, 200, 255});
         }
     }
+
 }

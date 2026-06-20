@@ -3,6 +3,18 @@
 #include <float.h>
 #include <stdlib.h>
 
+const char *WEAPON_NAMES[WEAPON_ID_COUNT] = {
+    "PULSE BOLT",
+    "ORBITERS",
+    "BEAM",
+    "NOVA",
+    "MINES",
+    "CHAIN",
+    "BOOMERANG",
+    "TRAIL",
+    "WHIP",
+};
+
 Color enemy_color_for_type(EnemyType type) {
     switch (type) {
         case ENEMY_BIT:       return (Color){255, 50, 100, 255};
@@ -82,27 +94,38 @@ void weapon_kill_enemy(GameState *gs, int idx) {
     }
 }
 
-bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col) {
+bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col,
+                      WeaponID wid) {
     if (idx < 0 || idx >= MAX_ENEMIES) return false;
     Enemy *e = &gs->enemies[idx];
     if (!e->active) return false;
     int dmg = base_dmg + gs->weapon_damage_bonus;
+    int effective = (dmg > e->hp) ? e->hp : dmg;
+    if (effective > 0 && wid < WEAPON_ID_COUNT) {
+        gs->stats.damage_dealt[wid] += effective;
+    }
     e->hp -= dmg;
     popup_spawn(gs, e->pos, dmg, popup_col);
     if (e->hp <= 0) {
+        if (wid < WEAPON_ID_COUNT) gs->stats.kills_by[wid]++;
         weapon_kill_enemy(gs, idx);
         return true;
     }
     return false;
 }
 
-void weapon_hit_boss(GameState *gs, int base_dmg) {
+void weapon_hit_boss(GameState *gs, int base_dmg, WeaponID wid) {
     if (!gs->boss.active) return;
-    boss_take_damage(gs, base_dmg + gs->weapon_damage_bonus);
+    int dmg = base_dmg + gs->weapon_damage_bonus;
+    int effective = (dmg > gs->boss.hp) ? gs->boss.hp : dmg;
+    if (effective > 0 && wid < WEAPON_ID_COUNT) {
+        gs->stats.damage_dealt[wid] += effective;
+    }
+    boss_take_damage(gs, dmg);
 }
 
 void weapon_aoe_damage(GameState *gs, Vector2 center, float radius,
-                       int base_dmg, Color popup_col) {
+                       int base_dmg, Color popup_col, WeaponID wid) {
     for (int i = 0; i < MAX_ENEMIES; i++) {
         if (!gs->enemies[i].active) continue;
         if (gs->enemies[i].phased) continue;
@@ -110,21 +133,21 @@ void weapon_aoe_damage(GameState *gs, Vector2 center, float radius,
         float dy = gs->enemies[i].pos.y - center.y;
         float reach = radius + gs->enemies[i].radius;
         if (dx * dx + dy * dy < reach * reach) {
-            weapon_hit_enemy(gs, i, base_dmg, popup_col);
+            weapon_hit_enemy(gs, i, base_dmg, popup_col, wid);
         }
     }
-    weapon_try_hit_boss_radius(gs, center, radius, base_dmg);
+    weapon_try_hit_boss_radius(gs, center, radius, base_dmg, wid);
     particles_spawn_burst(gs, center, popup_col, 12);
 }
 
 void weapon_try_hit_boss_radius(GameState *gs, Vector2 center,
-                                 float radius, int base_dmg) {
+                                 float radius, int base_dmg, WeaponID wid) {
     if (!gs->boss.active) return;
     float dx = gs->boss.pos.x - center.x;
     float dy = gs->boss.pos.y - center.y;
     float reach = radius + BOSS_RADIUS;
     if (dx * dx + dy * dy < reach * reach) {
-        weapon_hit_boss(gs, base_dmg);
+        weapon_hit_boss(gs, base_dmg, wid);
     }
 }
 

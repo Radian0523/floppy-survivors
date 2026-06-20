@@ -38,7 +38,8 @@ void whip_update(GameState *gs, float dt) {
         while (diff < -3.14159f) diff += 2.0f * 3.14159f;
         if (fabsf(diff) < gs->whip.arc * 0.5f) {
             weapon_hit_enemy(gs, i, gs->whip.damage,
-                             (Color){220, 220, 255, 255});
+                             (Color){220, 220, 255, 255},
+                             WEAPON_ID_WHIP);
         }
     }
     if (gs->boss.active) {
@@ -51,7 +52,7 @@ void whip_update(GameState *gs, float dt) {
             while (diff > 3.14159f) diff -= 2.0f * 3.14159f;
             while (diff < -3.14159f) diff += 2.0f * 3.14159f;
             if (fabsf(diff) < gs->whip.arc * 0.5f) {
-                weapon_hit_boss(gs, gs->whip.damage);
+                weapon_hit_boss(gs, gs->whip.damage, WEAPON_ID_WHIP);
             }
         }
     }

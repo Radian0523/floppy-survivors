@@ -35,7 +35,7 @@ void chain_update(GameState *gs, float dt) {
     for (int j = 0; j < gs->chain.jumps && current >= 0; j++) {
         hit[current] = true;
         gs->chain.visual.points[gs->chain.visual.count++] = cur_pos;
-        weapon_hit_enemy(gs, current, gs->chain.damage, (Color){200, 240, 255, 255});
+        weapon_hit_enemy(gs, current, gs->chain.damage, (Color){200, 240, 255, 255}, WEAPON_ID_CHAIN);
 
         if (gs->chain.visual.count >= CHAIN_MAX_POINTS) break;
 

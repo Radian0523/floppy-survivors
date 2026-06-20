@@ -8,20 +8,22 @@
 // Caller passes the BASE damage (e.g. gs->bullet_damage).
 
 // Apply damage to one enemy. Spawns popup, handles death (kill_enemy).
+// Records damage to stats.damage_dealt[wid] (overkill clamped to remaining HP).
 // Returns true if the enemy died.
-bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col);
+bool weapon_hit_enemy(GameState *gs, int idx, int base_dmg, Color popup_col,
+                      WeaponID wid);
 
 // Apply damage to the boss (if active).
-void weapon_hit_boss(GameState *gs, int base_dmg);
+void weapon_hit_boss(GameState *gs, int base_dmg, WeaponID wid);
 
 // AoE: damage every enemy (and boss) within radius from center.
 // Spawns a particle burst at the center.
 void weapon_aoe_damage(GameState *gs, Vector2 center, float radius,
-                       int base_dmg, Color popup_col);
+                       int base_dmg, Color popup_col, WeaponID wid);
 
 // Try to damage boss if within (radius + BOSS_RADIUS) from center.
 void weapon_try_hit_boss_radius(GameState *gs, Vector2 center,
-                                float radius, int base_dmg);
+                                float radius, int base_dmg, WeaponID wid);
 
 // Destroy any enemy bullets within (radius + ENEMY_BULLET_RADIUS) from center.
 // Spawns a small particle burst per destroyed bullet. Returns number destroyed.

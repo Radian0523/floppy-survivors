@@ -99,7 +99,7 @@ void bullet_update(GameState *gs, float dt) {
             float dy = b->pos.y - gs->boss.pos.y;
             if (dx * dx + dy * dy <
                 (BULLET_RADIUS + BOSS_RADIUS) * (BULLET_RADIUS + BOSS_RADIUS)) {
-                weapon_hit_boss(gs, gs->pulse.damage);
+                weapon_hit_boss(gs, gs->pulse.damage, WEAPON_ID_PULSE);
                 b->active = false;
                 continue;
             }
@@ -117,7 +117,7 @@ void bullet_update(GameState *gs, float dt) {
             float dy = b->pos.y - gs->enemies[j].pos.y;
             float reach = BULLET_RADIUS + gs->enemies[j].radius;
             if (dx * dx + dy * dy < reach * reach) {
-                weapon_hit_enemy(gs, j, gs->pulse.damage, popup_col);
+                weapon_hit_enemy(gs, j, gs->pulse.damage, popup_col, WEAPON_ID_PULSE);
                 b->active = false;
                 break;
             }

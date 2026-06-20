@@ -62,7 +62,8 @@ void mines_update(GameState *gs, float dt) {
             weapon_aoe_damage(gs, m->pos,
                 gs->mines.explosion_radius * gs->weapon_area_mult,
                 gs->mines.damage,
-                (Color){255, 220, 100, 255});
+                (Color){255, 220, 100, 255},
+                WEAPON_ID_MINES);
             weapon_destroy_bullets_at(gs, m->pos,
                 gs->mines.explosion_radius * gs->weapon_area_mult);
             m->active = false;

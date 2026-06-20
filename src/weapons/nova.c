@@ -31,7 +31,7 @@ void nova_update(GameState *gs, float dt) {
             float ring_inner = gs->nova.current_radius - 15.0f;
             float ring_outer = gs->nova.current_radius + 15.0f;
             if (dist > ring_inner && dist < ring_outer) {
-                weapon_hit_enemy(gs, i, gs->nova.damage, popup_col);
+                weapon_hit_enemy(gs, i, gs->nova.damage, popup_col, WEAPON_ID_NOVA);
             }
         }
 
@@ -42,7 +42,7 @@ void nova_update(GameState *gs, float dt) {
             float ring_inner = gs->nova.current_radius - 15.0f;
             float ring_outer = gs->nova.current_radius + 15.0f;
             if (dist > ring_inner - BOSS_RADIUS && dist < ring_outer + BOSS_RADIUS) {
-                weapon_hit_boss(gs, gs->nova.damage);
+                weapon_hit_boss(gs, gs->nova.damage, WEAPON_ID_NOVA);
             }
         }
 

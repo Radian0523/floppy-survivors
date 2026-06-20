@@ -73,7 +73,8 @@ void boomerang_update(GameState *gs, float dt) {
                 (gs->boomerang.radius + gs->enemies[j].radius) *
                 (gs->boomerang.radius + gs->enemies[j].radius)) {
                 weapon_hit_enemy(gs, j, gs->boomerang.damage,
-                                 (Color){150, 255, 180, 255});
+                                 (Color){150, 255, 180, 255},
+                                 WEAPON_ID_BOOMERANG);
             }
         }
         if (gs->boss.active) {
@@ -82,7 +83,7 @@ void boomerang_update(GameState *gs, float dt) {
             if (dx * dx + dy * dy <
                 (gs->boomerang.radius + BOSS_RADIUS) *
                 (gs->boomerang.radius + BOSS_RADIUS)) {
-                weapon_hit_boss(gs, gs->boomerang.damage);
+                weapon_hit_boss(gs, gs->boomerang.damage, WEAPON_ID_BOOMERANG);
             }
         }
         weapon_destroy_bullets_at(gs, b->pos, gs->boomerang.radius);

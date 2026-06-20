@@ -62,6 +62,8 @@ void gem_update(GameState *gs, float dt) {
             int xp_gained = gem_xp_value(g->tier);
             g->active = false;
             gs->xp += xp_gained;
+            gs->stats.xp_collected += xp_gained;
+            gs->stats.gems_collected++;
             audio_play(SFX_GEM_PICKUP);
             Color spark = (g->tier == GEM_TIER_L) ?
                 (Color){180, 150, 255, 255} :

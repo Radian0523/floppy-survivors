@@ -36,10 +36,10 @@ void orbiters_update(GameState *gs, float dt) {
             float dy = op.y - gs->enemies[j].pos.y;
             float reach = ORBITER_RADIUS + gs->enemies[j].radius;
             if (dx * dx + dy * dy < reach * reach) {
-                weapon_hit_enemy(gs, j, gs->orbiters.damage, popup_col);
+                weapon_hit_enemy(gs, j, gs->orbiters.damage, popup_col, WEAPON_ID_ORBITERS);
             }
         }
-        weapon_try_hit_boss_radius(gs, op, ORBITER_RADIUS, gs->orbiters.damage);
+        weapon_try_hit_boss_radius(gs, op, ORBITER_RADIUS, gs->orbiters.damage, WEAPON_ID_ORBITERS);
         weapon_destroy_bullets_at(gs, op, ORBITER_RADIUS);
     }
 }

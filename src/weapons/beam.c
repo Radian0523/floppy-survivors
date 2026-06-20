@@ -46,7 +46,7 @@ void beam_update(GameState *gs, float dt) {
             if (proj < 0 || proj > gs->beam.length) continue;
             float perp = fabsf(-dx * sin_a + dy * cos_a);
             if (perp < eff_width / 2 + gs->enemies[i].radius) {
-                weapon_hit_enemy(gs, i, gs->beam.damage, popup_col);
+                weapon_hit_enemy(gs, i, gs->beam.damage, popup_col, WEAPON_ID_BEAM);
             }
         }
 
@@ -57,7 +57,7 @@ void beam_update(GameState *gs, float dt) {
             if (proj >= 0 && proj <= gs->beam.length) {
                 float perp = fabsf(-dx * sin_a + dy * cos_a);
                 if (perp < eff_width / 2 + BOSS_RADIUS) {
-                    weapon_hit_boss(gs, gs->beam.damage);
+                    weapon_hit_boss(gs, gs->beam.damage, WEAPON_ID_BEAM);
                 }
             }
         }
