@@ -48,6 +48,31 @@ WEAPON_DEFINES = [
     ("WHIP",      "WHIP_DAMAGE"),
 ]
 
+# Per-weapon "secondary knob" used when damage alone hits its cap. Tuned in
+# the same direction as the gap (WEAK -> buff, STR -> nerf).
+#
+# (weapon, define, type, step_pct_to_strengthen, min_factor, max_factor)
+#   step_pct_to_strengthen: per-iter delta applied to STRENGTHEN the weapon.
+#     +0.15 means "multiply by 1.15 when WEAK, multiply by 0.85 when STR".
+#     Negative means "decreasing the value strengthens" (interval-like knobs).
+#   min_factor / max_factor: bounds vs the ORIGINAL value, so we don't drift
+#     to absurd values (e.g. range=2000 or interval=0.001).
+WEAPON_SECONDARY = [
+    ("PULSE",     "WEAPON_FIRE_INTERVAL",    "float", -0.10, 0.40, 2.50),
+    ("ORBITERS",  "ORBITER_ORBIT_RADIUS",    "float",  0.15, 0.50, 3.00),
+    ("BEAM",      "BEAM_LENGTH",             "float",  0.15, 0.50, 2.50),
+    ("NOVA",      "NOVA_RADIUS_BASE",        "float",  0.15, 0.50, 2.50),
+    ("MINES",     "MINE_EXPLOSION_RADIUS",   "float",  0.20, 0.50, 3.00),
+    ("CHAIN",     "CHAIN_RANGE",             "float",  0.15, 0.50, 2.50),
+    ("BOOMERANG", "BOOMERANG_RANGE",         "float",  0.15, 0.50, 2.50),
+    ("TRAIL",     "TRAIL_INTERVAL",          "float", -0.15, 0.30, 3.00),
+    ("WHIP",      "WHIP_RANGE",              "float",  0.20, 0.50, 3.00),
+]
+
+# Captured at script start so factor bounds are computed against the source-of-
+# truth original values, not the current (possibly already-tuned) ones.
+_orig_secondary = None
+
 
 def read_damages():
     text = CONFIG_H.read_text()
@@ -67,6 +92,33 @@ def write_damages(new):
         text = re.sub(
             rf"(#define\s+{define}\s+)\d+",
             rf"\g<1>{val}",
+            text,
+        )
+    CONFIG_H.write_text(text)
+
+
+def read_secondary():
+    """Return list of floats matching WEAPON_SECONDARY order."""
+    text = CONFIG_H.read_text()
+    out = []
+    for name, define, kind, *_ in WEAPON_SECONDARY:
+        # float values may have an 'f' suffix; integers are also accepted
+        m = re.search(rf"#define\s+{define}\s+([-\d.]+)f?\b", text)
+        if not m:
+            print(f"ERROR: {define} not found in config.h")
+            sys.exit(1)
+        out.append(float(m.group(1)))
+    return out
+
+
+def write_secondary(new):
+    text = CONFIG_H.read_text()
+    for (name, define, kind, *_), val in zip(WEAPON_SECONDARY, new):
+        suffix = "f" if kind == "float" else ""
+        formatted = f"{val:.3f}{suffix}" if kind == "float" else f"{int(val)}{suffix}"
+        text = re.sub(
+            rf"(#define\s+{define}\s+)[-\d.]+f?\b",
+            rf"\g<1>{formatted}",
             text,
         )
     CONFIG_H.write_text(text)
@@ -153,8 +205,9 @@ def main():
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 4)
     ap.add_argument("--dry-run", action="store_true",
                     help="Measure only; don't modify config.h")
-    ap.add_argument("--max-damage", type=int, default=40,
-                    help="Per-weapon damage cap (avoid runaway)")
+    ap.add_argument("--max-damage", type=int, default=10,
+                    help="Soft cap on damage. Above this we switch to "
+                         "structural tuning (range/interval). Default 10.")
     ap.add_argument("--target", choices=["median", "mean", "max"],
                     default="median",
                     help="DPS target across weapons")
@@ -169,11 +222,16 @@ def main():
         print(f"Build first. Missing: {EXE}")
         return 1
 
+    global _orig_secondary
     orig = read_damages()
+    _orig_secondary = read_secondary()
     print(f"Initial damages: {dict(zip([n for n,_ in WEAPON_DEFINES], orig))}")
+    sec_print = {n: f"{v:g}" for (n, *_), v in zip(WEAPON_SECONDARY, _orig_secondary)}
+    print(f"Initial secondary: {sec_print}")
     print()
 
     current = orig[:]
+    current_sec = _orig_secondary[:]
     for it in range(args.iters):
         if it > 0:
             rebuild()
@@ -191,36 +249,98 @@ def main():
               f"(mean run duration {mean_dur:.1f}s)")
 
         # Only touch outliers; preserve weapons inside the band.
+        # PULSE is the universal starter weapon — every player relies on it
+        # even before any upgrade unlocks. Treat it as the FIXED baseline and
+        # tune the other 8 weapons relative to it.
         new = []
+        new_sec = current_sec[:]
         changes = []
         min_step = 1.0 / args.max_step
         for w, (name, _) in enumerate(WEAPON_DEFINES):
-            if dps[w] < 0.01:
-                # Weapon never landed a hit — small bump
-                new_d = current[w] + 1
-                if new_d != current[w]:
-                    changes.append(f"{name}({current[w]}->{new_d}, no-hit)")
-            elif lo <= dps[w] <= hi:
-                # In band — leave alone
-                new_d = current[w]
-            else:
-                scale = tgt / dps[w]
-                scale = max(min_step, min(args.max_step, scale))
-                new_d = max(1, round(current[w] * scale))
-                if new_d != current[w]:
+            if name == "PULSE":
+                new.append(current[w])
+                continue
+            old_d = current[w]
+            sec_info = WEAPON_SECONDARY[w]
+            sec_name = sec_info[1]
+            sec_step = sec_info[3]      # signed: positive = increasing buffs
+            sec_min_factor = sec_info[4]
+            sec_max_factor = sec_info[5]
+            orig_sec_val = _orig_secondary[w]
+            sec_lo = orig_sec_val * sec_min_factor
+            sec_hi = orig_sec_val * sec_max_factor
+
+            in_band = (dps[w] >= lo and dps[w] <= hi) if dps[w] > 0.01 else False
+            is_weak = (not in_band) and dps[w] < lo
+            is_str  = (not in_band) and dps[w] > hi
+
+            if in_band:
+                new.append(old_d)
+                continue
+
+            # Decide if we should touch damage or secondary this iter.
+            # Prefer damage if it has room. Otherwise touch secondary.
+            damage_has_room_up = (old_d < args.max_damage)
+            damage_has_room_dn = (old_d > 1)
+
+            new_d = old_d
+            use_secondary = False
+            if is_weak:
+                if damage_has_room_up:
+                    scale = tgt / max(dps[w], 0.01)
+                    scale = max(min_step, min(args.max_step, scale))
+                    proposed = max(1, round(old_d * scale))
+                    proposed = min(proposed, args.max_damage)
+                    if proposed != old_d:
+                        new_d = proposed
+                    else:
+                        use_secondary = True
+                else:
+                    use_secondary = True
+            elif is_str:
+                if damage_has_room_dn:
+                    scale = tgt / dps[w]
+                    scale = max(min_step, min(args.max_step, scale))
+                    proposed = max(1, round(old_d * scale))
+                    if proposed != old_d:
+                        new_d = proposed
+                    else:
+                        use_secondary = True
+                else:
+                    use_secondary = True
+
+            new.append(new_d)
+
+            if use_secondary:
+                # WEAK -> apply +sec_step (in strengthen direction)
+                # STR  -> apply -sec_step (opposite direction)
+                step = sec_step if is_weak else -sec_step
+                factor = 1.0 + step
+                proposed_sec = current_sec[w] * factor
+                proposed_sec = max(sec_lo, min(sec_hi, proposed_sec))
+                if abs(proposed_sec - current_sec[w]) > 1e-4:
                     pct = (dps[w] / tgt - 1) * 100
                     changes.append(
-                        f"{name}({current[w]}->{new_d}, {pct:+.0f}% off)"
+                        f"{name}.{sec_name} "
+                        f"{current_sec[w]:.2f}->{proposed_sec:.2f} "
+                        f"({pct:+.0f}% off, dmg at cap)"
                     )
-            new_d = min(new_d, args.max_damage)
-            new.append(new_d)
+                    new_sec[w] = proposed_sec
+                # else: at structural cap too; nothing we can do
+            elif new_d != old_d:
+                pct = (dps[w] / tgt - 1) * 100
+                changes.append(
+                    f"{name}.dmg {old_d}->{new_d} ({pct:+.0f}% off)"
+                )
 
         if not changes:
             print("  all weapons within band — converged.")
             print()
             break
 
-        print(f"  adjusting: {', '.join(changes)}")
+        print(f"  adjusting:")
+        for c in changes:
+            print(f"    {c}")
         print()
 
         if args.dry_run:
@@ -228,7 +348,9 @@ def main():
             return 0
 
         current = new
+        current_sec = new_sec
         write_damages(current)
+        write_secondary(current_sec)
 
     # Final rebuild + measure
     rebuild()
@@ -241,7 +363,14 @@ def main():
     else:
         tgt = max(dps)
     print_table(dps, current, target=tgt, band=args.band)
-    print(f"\nFinal: {dict(zip([n for n,_ in WEAPON_DEFINES], current))}")
+    print(f"\nFinal damages: {dict(zip([n for n,_ in WEAPON_DEFINES], current))}")
+    sec_final = read_secondary()
+    print(f"Final secondary:")
+    for (name, define, *_), orig_v, new_v in zip(WEAPON_SECONDARY,
+                                                  _orig_secondary, sec_final):
+        if abs(orig_v - new_v) > 1e-4:
+            ratio = new_v / orig_v
+            print(f"  {define}: {orig_v:g} -> {new_v:.3g}  ({ratio:.2f}x)")
     return 0
 
 
