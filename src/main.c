@@ -113,28 +113,66 @@ void game_start_with_weapon(GameState *gs, StartingWeapon weapon) {
 
 static void draw_hud(const GameState *gs) {
     char buf[64];
+    int sw = GetScreenWidth();
+
+    // === Full-width XP bar (top edge) ===
+    int xp_bar_h = 14;
+    int xp_bar_y = 0;
+    float xp_ratio = (gs->xp_to_next > 0)
+        ? (float)gs->xp / gs->xp_to_next : 0;
+    if (xp_ratio > 1.0f) xp_ratio = 1.0f;
+    // Base track
+    DrawRectangle(0, xp_bar_y, sw, xp_bar_h, (Color){12, 18, 28, 230});
+    // Decile tick marks
+    for (int i = 1; i < 10; i++) {
+        int tx = sw * i / 10;
+        DrawRectangle(tx, xp_bar_y + xp_bar_h - 3, 1, 3,
+                      (Color){60, 80, 100, 200});
+    }
+    // Fill
+    int fill_w = (int)(sw * xp_ratio);
+    if (fill_w > 0) {
+        DrawRectangle(0, xp_bar_y, fill_w, xp_bar_h,
+                      (Color){80, 220, 130, 230});
+        // Leading edge glow
+        if (fill_w < sw) {
+            DrawRectangle(fill_w - 2, xp_bar_y, 4, xp_bar_h,
+                          (Color){200, 255, 200, 200});
+        }
+    }
+    // Bottom border line
+    DrawRectangle(0, xp_bar_y + xp_bar_h, sw, 1,
+                  (Color){60, 100, 120, 200});
+
+    // LV badge overlay (left side of the bar)
+    sprintf(buf, "LV %d", gs->level);
+    int lv_w = MeasureText(buf, 12);
+    int lv_pad_x = 8;
+    int lv_box_w = lv_w + lv_pad_x * 2;
+    DrawRectangle(0, xp_bar_y, lv_box_w, xp_bar_h,
+                  (Color){10, 14, 24, 200});
+    DrawText(buf, lv_pad_x, xp_bar_y + 1, 12, (Color){180, 255, 255, 255});
+
+    // XP fraction on right side of the bar (only when not near zero)
+    sprintf(buf, "%d / %d", gs->xp, gs->xp_to_next);
+    int xp_text_w = MeasureText(buf, 10);
+    DrawText(buf, sw - xp_text_w - 6, xp_bar_y + 2, 10,
+             (Color){240, 240, 240, 220});
+
+    // === Below the XP bar: standard HUD ===
+    int hud_y = xp_bar_h + 8;
 
     int minutes = (int)gs->game_time / 60;
     int seconds = (int)gs->game_time % 60;
     sprintf(buf, "TIME %d:%02d", minutes, seconds);
-    DrawText(buf, 10, 10, 20, (Color){200, 200, 200, 255});
+    DrawText(buf, 10, hud_y, 20, (Color){200, 200, 200, 255});
 
     sprintf(buf, "HP %d/%d", gs->player.hp, gs->player.max_hp);
-    DrawText(buf, 10, 35, 20, (Color){255, 100, 100, 255});
-
-    sprintf(buf, "LV %d", gs->level);
-    DrawText(buf, 10, 60, 20, (Color){100, 255, 255, 255});
-
-    int bar_w = 150;
-    int bar_h = 10;
-    int bar_x = 60;
-    int bar_y = 65;
-    float xp_ratio = (float)gs->xp / gs->xp_to_next;
-    DrawRectangle(bar_x, bar_y, bar_w, bar_h, (Color){30, 30, 50, 255});
-    DrawRectangle(bar_x, bar_y, (int)(bar_w * xp_ratio), bar_h, (Color){100, 255, 100, 255});
+    DrawText(buf, 10, hud_y + 25, 20, (Color){255, 100, 100, 255});
 
     sprintf(buf, "KILLS %d", gs->kills);
-    DrawText(buf, GetScreenWidth() - 120, 10, 20, (Color){200, 200, 200, 255});
+    int kw = MeasureText(buf, 20);
+    DrawText(buf, sw - kw - 10, hud_y, 20, (Color){200, 200, 200, 255});
 }
 
 static void update_game(GameState *gs, float dt) {
