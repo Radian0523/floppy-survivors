@@ -1,4 +1,5 @@
 #include "game.h"
+#include "weapon_util.h"
 #include <math.h>
 #include <stdlib.h>
 
@@ -391,7 +392,12 @@ static void update_one_enemy(GameState *gs, Enemy *e, float dt) {
     if (e->phased) return;
 
     if (dist < PLAYER_RADIUS + e->radius) {
-        player_take_damage(gs, ENEMY_DAMAGE);
+        // Find enemy index for retaliation
+        int idx = (int)(e - gs->enemies);
+        if (player_take_damage(gs, ENEMY_DAMAGE)) {
+            weapon_hit_enemy(gs, idx, PLAYER_CONTACT_DAMAGE,
+                             (Color){120, 220, 255, 255}, WEAPON_ID_COUNT);
+        }
     }
 }
 

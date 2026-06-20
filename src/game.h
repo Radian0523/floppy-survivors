@@ -406,7 +406,8 @@ typedef struct {
 // Module functions
 void player_init(Player *p, float scale);
 void player_update(GameState *gs, float dt, float scale);
-void player_take_damage(GameState *gs, int damage);
+// Returns true if damage was actually applied (not invincible, not god mode).
+bool player_take_damage(GameState *gs, int damage);
 void player_draw(const Player *p, float scale, Vector2 offset);
 void player_draw_hp_bar(const Player *p, float scale, Vector2 offset);
 

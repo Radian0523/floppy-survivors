@@ -51,10 +51,10 @@ void player_update(GameState *gs, float dt, float scale) {
     if (p->pos.y > LOGICAL_H - margin) p->pos.y = LOGICAL_H - margin;
 }
 
-void player_take_damage(GameState *gs, int damage) {
+bool player_take_damage(GameState *gs, int damage) {
     Player *p = &gs->player;
-    if (gs->debug_invincible) return;
-    if (p->invincible_timer > 0) return;
+    if (gs->debug_invincible) return false;
+    if (p->invincible_timer > 0) return false;
     int scaled = (int)(damage * g_params.enemy_damage_mult + 0.5f);
     if (scaled < 1) scaled = 1;
     p->hp -= scaled;
@@ -64,6 +64,7 @@ void player_take_damage(GameState *gs, int damage) {
     audio_play(SFX_PLAYER_HIT);
     particles_spawn_burst(gs, p->pos, (Color){255, 255, 255, 255}, 16);
     shake_add(gs, SHAKE_HIT);
+    return true;
 }
 
 void player_draw(const Player *p, float scale, Vector2 offset) {

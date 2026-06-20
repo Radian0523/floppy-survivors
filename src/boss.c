@@ -1,4 +1,5 @@
 #include "game.h"
+#include "weapon_util.h"
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -86,7 +87,9 @@ void boss_update(GameState *gs, float dt) {
     }
 
     if (dist < PLAYER_RADIUS + BOSS_RADIUS) {
-        player_take_damage(gs, BOSS_DAMAGE);
+        if (player_take_damage(gs, BOSS_DAMAGE)) {
+            weapon_hit_boss(gs, PLAYER_CONTACT_DAMAGE, WEAPON_ID_COUNT);
+        }
     }
 }
 

@@ -15,6 +15,9 @@
 #define PLAYER_RADIUS 12.0f
 #define PLAYER_MAX_HP 5
 #define PLAYER_INVINCIBLE_TIME 0.8f
+// Damage dealt back to the enemy/boss on contact (only when the hit
+// actually landed — invincibility frames skip this too).
+#define PLAYER_CONTACT_DAMAGE 3
 
 // Weapon (Pulse Bolt)
 #define WEAPON_FIRE_INTERVAL 0.56f
