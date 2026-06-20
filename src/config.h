@@ -20,7 +20,7 @@
 #define PLAYER_CONTACT_DAMAGE 3
 
 // Weapon (Pulse Bolt)
-#define WEAPON_FIRE_INTERVAL 0.56f
+#define WEAPON_FIRE_INTERVAL 0.560f
 #define BULLET_SPEED 370.0f
 #define BULLET_DAMAGE 1
 #define BULLET_RADIUS 4.0f
@@ -29,36 +29,36 @@
 // Orbiters
 #define ORBITER_COUNT_BASE 2
 #define ORBITER_RADIUS 8.0f
-#define ORBITER_ORBIT_RADIUS 50.0f
+#define ORBITER_ORBIT_RADIUS 66.125f
 #define ORBITER_SPEED 3.0f
-#define ORBITER_DAMAGE 3
+#define ORBITER_DAMAGE 10
 #define MAX_ORBITERS 8
 
 // Beam
 #define BEAM_INTERVAL 2.5f
 #define BEAM_DURATION 0.8f
-#define BEAM_LENGTH 300.0f
+#define BEAM_LENGTH 216.750f
 #define BEAM_WIDTH 8.0f
-#define BEAM_DAMAGE 4
+#define BEAM_DAMAGE 1
 #define BEAM_SWEEP_ANGLE 0.7f
 
 // Nova
 #define NOVA_INTERVAL 3.0f
-#define NOVA_RADIUS_BASE 80.0f
-#define NOVA_DAMAGE 1
+#define NOVA_RADIUS_BASE 49.130f
+#define NOVA_DAMAGE 2
 #define NOVA_EXPAND_SPEED 400.0f
 
 // Spark Mines
 #define MINE_INTERVAL 2.5f
 #define MINE_LIFE 8.0f
 #define MINE_RADIUS 10.0f
-#define MINE_EXPLOSION_RADIUS 40.0f
-#define MINE_DAMAGE 2
+#define MINE_EXPLOSION_RADIUS 40.000f
+#define MINE_DAMAGE 1
 #define MAX_MINES 16
 
 // Chain Lightning
 #define CHAIN_INTERVAL 2.0f
-#define CHAIN_RANGE 120.0f
+#define CHAIN_RANGE 120.000f
 #define CHAIN_JUMP_RANGE 80.0f
 #define CHAIN_JUMPS 3
 #define CHAIN_DAMAGE 1
@@ -68,24 +68,24 @@
 // Boomerang
 #define BOOMERANG_INTERVAL 1.5f
 #define BOOMERANG_SPEED 280.0f
-#define BOOMERANG_RANGE 180.0f
+#define BOOMERANG_RANGE 180.000f
 #define BOOMERANG_RADIUS 10.0f
 #define BOOMERANG_DAMAGE 3
 #define MAX_BOOMERANGS 8
 
 // Trail
-#define TRAIL_INTERVAL 0.12f
+#define TRAIL_INTERVAL 0.033f
 #define TRAIL_LIFE 1.2f
 #define TRAIL_RADIUS 8.0f
-#define TRAIL_DAMAGE 2
+#define TRAIL_DAMAGE 10
 #define MAX_TRAIL_MARKS 64
 
 // Whip
 #define WHIP_INTERVAL 1.4f
 #define WHIP_ANIM 0.25f
-#define WHIP_RANGE 70.0f
+#define WHIP_RANGE 100.800f
 #define WHIP_ARC 2.0f
-#define WHIP_DAMAGE 2
+#define WHIP_DAMAGE 10
 
 // Items & Chests
 #define MAX_ITEMS 32
