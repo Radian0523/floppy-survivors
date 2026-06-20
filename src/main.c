@@ -86,6 +86,7 @@ static void game_init(GameState *gs) {
     gs->upgrading = false;
     gs->upgrade_hover = -1;
     gs->paused = false;
+    gs->game_speed = 1;
     gs->last_score_flags = 0;
     for (int i = 0; i < UPGRADE_COUNT; i++) gs->upgrade_picks[i] = 0;
 }
@@ -173,7 +174,21 @@ static void draw_hud(const GameState *gs) {
     sprintf(buf, "KILLS %d", gs->kills);
     int kw = MeasureText(buf, 20);
     DrawText(buf, sw - kw - 10, hud_y, 20, (Color){200, 200, 200, 255});
+
+    // Speed badge (only shown when > 1x)
+    if (gs->game_speed > 1) {
+        sprintf(buf, "x%d", gs->game_speed);
+        int bw = MeasureText(buf, 22);
+        int bx = sw - bw - 10;
+        int by = hud_y + 28;
+        DrawRectangle(bx - 6, by - 2, bw + 12, 26, (Color){40, 20, 60, 200});
+        DrawRectangleLines(bx - 6, by - 2, bw + 12, 26,
+                           (Color){255, 180, 80, 220});
+        DrawText(buf, bx, by + 1, 22, (Color){255, 220, 120, 255});
+    }
 }
+
+static void update_game_step(GameState *gs, float dt);
 
 static void update_game(GameState *gs, float dt) {
     debug_update(gs);
@@ -200,6 +215,22 @@ static void update_game(GameState *gs, float dt) {
         return;
     }
 
+    // F2 cycles game speed: 1x -> 2x -> 3x -> 1x
+    if (IsKeyPressed(KEY_F2)) {
+        gs->game_speed = (gs->game_speed % 3) + 1;
+    }
+
+    // Run N independent sub-steps so collision/spawn timing stays consistent
+    // (rather than multiplying dt, which would let fast bullets tunnel).
+    int steps = gs->game_speed;
+    if (steps < 1) steps = 1;
+    for (int s = 0; s < steps; s++) {
+        update_game_step(gs, dt);
+        if (gs->scene != SCENE_GAME || gs->upgrading) break;
+    }
+}
+
+static void update_game_step(GameState *gs, float dt) {
     gs->game_time += dt;
 
     if (!gs->boss.active && !gs->boss_defeated && gs->game_time >= BOSS_SPAWN_TIME) {

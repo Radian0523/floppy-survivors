@@ -308,6 +308,7 @@ void scene_how_to_play_draw(const GameState *gs) {
     DrawText("  Move:        WASD / Arrow keys / Mouse hold", left, y, 16, label); y += line;
     DrawText("  Confirm:     SPACE / Enter / Click", left, y, 16, label); y += line;
     DrawText("  Pause:       ESC  (during game)", left, y, 16, label); y += line;
+    DrawText("  Speed:       F2   (cycle 1x / 2x / 3x)", left, y, 16, val); y += line;
     DrawText("  Debug:       TAB  (during game)", left, y, 16, val); y += line + 8;
 
     DrawText("OBJECTIVE", left, y, 18, section); y += line + 2;

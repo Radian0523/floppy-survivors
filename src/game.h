@@ -381,6 +381,7 @@ typedef struct {
     float scene_timer;
     int weapon_select_hover;
     int difficulty;
+    int game_speed;   // 1 = normal, 2 = 2x, 3 = 3x (in-game time multiplier)
     bool paused;
     Settings settings;
     int settings_hover;
