@@ -171,21 +171,17 @@ static void draw_hud(const GameState *gs) {
     sprintf(buf, "HP %d/%d", gs->player.hp, gs->player.max_hp);
     DrawText(buf, 10, hud_y + 25, 20, (Color){255, 100, 100, 255});
 
-    sprintf(buf, "KILLS %d", gs->kills);
-    int kw = MeasureText(buf, 20);
-    DrawText(buf, sw - kw - 10, hud_y, 20, (Color){200, 200, 200, 255});
+    // Speed control (replaces KILLS at top-right): current speed + key hint
+    sprintf(buf, "SPEED x%d", gs->game_speed);
+    Color spd_col = (gs->game_speed > 1)
+        ? (Color){255, 220, 120, 255}
+        : (Color){200, 200, 200, 255};
+    int sw_text = MeasureText(buf, 20);
+    DrawText(buf, sw - sw_text - 10, hud_y, 20, spd_col);
 
-    // Speed badge (only shown when > 1x)
-    if (gs->game_speed > 1) {
-        sprintf(buf, "x%d", gs->game_speed);
-        int bw = MeasureText(buf, 22);
-        int bx = sw - bw - 10;
-        int by = hud_y + 28;
-        DrawRectangle(bx - 6, by - 2, bw + 12, 26, (Color){40, 20, 60, 200});
-        DrawRectangleLines(bx - 6, by - 2, bw + 12, 26,
-                           (Color){255, 180, 80, 220});
-        DrawText(buf, bx, by + 1, 22, (Color){255, 220, 120, 255});
-    }
+    const char *hint = "Z: cycle 1x / 2x / 3x";
+    int hw = MeasureText(hint, 12);
+    DrawText(hint, sw - hw - 10, hud_y + 23, 12, (Color){140, 140, 160, 200});
 }
 
 static void update_game_step(GameState *gs, float dt);
@@ -215,8 +211,8 @@ static void update_game(GameState *gs, float dt) {
         return;
     }
 
-    // F2 cycles game speed: 1x -> 2x -> 3x -> 1x
-    if (IsKeyPressed(KEY_F2)) {
+    // Z cycles game speed: 1x -> 2x -> 3x -> 1x
+    if (IsKeyPressed(KEY_Z)) {
         gs->game_speed = (gs->game_speed % 3) + 1;
     }
 
