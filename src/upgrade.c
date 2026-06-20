@@ -206,9 +206,9 @@ static void apply_upgrade(GameState *gs, UpgradeType type) {
             break;
         case UPGRADE_ORBITER_COUNT:
             if (gs->orbiters.count < MAX_ORBITERS) {
-                gs->orbiters.slots[gs->orbiters.count].active = true;
-                gs->orbiters.slots[gs->orbiters.count].angle = 0;
                 gs->orbiters.count += UPGRADE_ORBITER_COUNT_ADD;
+                if (gs->orbiters.count > MAX_ORBITERS)
+                    gs->orbiters.count = MAX_ORBITERS;
             }
             break;
         case UPGRADE_BEAM_ARC:

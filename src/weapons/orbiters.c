@@ -2,31 +2,33 @@
 #include "../weapon_util.h"
 #include <math.h>
 
+#define TWO_PI 6.28318530718f
+
 void orbiters_init(GameState *gs) {
     gs->orbiters.has = true;
     gs->orbiters.count = ORBITER_COUNT_BASE;
     gs->orbiters.damage = ORBITER_DAMAGE;
     gs->orbiters.orbit_radius = ORBITER_ORBIT_RADIUS;
-    for (int i = 0; i < MAX_ORBITERS; i++) {
-        gs->orbiters.slots[i].active = (i < gs->orbiters.count);
-        gs->orbiters.slots[i].angle = (2.0f * 3.14159f * i) / gs->orbiters.count;
-    }
+    gs->orbiters.base_angle = 0;
+}
+
+static inline float orb_angle(const OrbitersWeapon *o, int i) {
+    return o->base_angle + (TWO_PI * (float)i) / (float)o->count;
 }
 
 void orbiters_update(GameState *gs, float dt) {
     if (!gs->orbiters.has) return;
+    if (gs->orbiters.count <= 0) return;
+
+    gs->orbiters.base_angle += ORBITER_SPEED * dt;
+    if (gs->orbiters.base_angle > TWO_PI) gs->orbiters.base_angle -= TWO_PI;
 
     Color popup_col = {200, 220, 255, 255};
     for (int i = 0; i < gs->orbiters.count; i++) {
-        if (!gs->orbiters.slots[i].active) continue;
-
-        gs->orbiters.slots[i].angle += ORBITER_SPEED * dt;
-        if (gs->orbiters.slots[i].angle > 2.0f * 3.14159f)
-            gs->orbiters.slots[i].angle -= 2.0f * 3.14159f;
-
+        float a = orb_angle(&gs->orbiters, i);
         Vector2 op = {
-            gs->player.pos.x + cosf(gs->orbiters.slots[i].angle) * gs->orbiters.orbit_radius,
-            gs->player.pos.y + sinf(gs->orbiters.slots[i].angle) * gs->orbiters.orbit_radius
+            gs->player.pos.x + cosf(a) * gs->orbiters.orbit_radius,
+            gs->player.pos.y + sinf(a) * gs->orbiters.orbit_radius
         };
 
         for (int j = 0; j < MAX_ENEMIES; j++) {
@@ -46,10 +48,11 @@ void orbiters_update(GameState *gs, float dt) {
 
 void orbiters_draw(const GameState *gs, float scale, Vector2 offset) {
     if (!gs->orbiters.has) return;
+    if (gs->orbiters.count <= 0) return;
     for (int i = 0; i < gs->orbiters.count; i++) {
-        if (!gs->orbiters.slots[i].active) continue;
-        float ox = gs->player.pos.x + cosf(gs->orbiters.slots[i].angle) * gs->orbiters.orbit_radius;
-        float oy = gs->player.pos.y + sinf(gs->orbiters.slots[i].angle) * gs->orbiters.orbit_radius;
+        float a = orb_angle(&gs->orbiters, i);
+        float ox = gs->player.pos.x + cosf(a) * gs->orbiters.orbit_radius;
+        float oy = gs->player.pos.y + sinf(a) * gs->orbiters.orbit_radius;
         float x = ox * scale + offset.x;
         float y = oy * scale + offset.y;
         float r = ORBITER_RADIUS * scale;

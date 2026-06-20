@@ -103,11 +103,6 @@ typedef struct {
 
 // === Per-slot types ===
 typedef struct {
-    float angle;
-    bool active;
-} Orbiter;
-
-typedef struct {
     Vector2 pos;
     float life;
     bool active;
@@ -144,10 +139,10 @@ typedef struct {
 
 typedef struct {
     bool has;
-    Orbiter slots[MAX_ORBITERS];
     int count;
     int damage;
     float orbit_radius;
+    float base_angle;  // single rotation phase; each orb sits at base + 2πi/count
 } OrbitersWeapon;
 
 typedef struct {
