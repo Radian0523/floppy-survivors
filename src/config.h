@@ -29,31 +29,31 @@
 // Orbiters
 #define ORBITER_COUNT_BASE 2
 #define ORBITER_RADIUS 8.0f
-#define ORBITER_ORBIT_RADIUS 66.125f
+#define ORBITER_ORBIT_RADIUS 60.0f
 #define ORBITER_SPEED 3.0f
-#define ORBITER_DAMAGE 10
+#define ORBITER_DAMAGE 5
 #define MAX_ORBITERS 8
 
 // Beam
 #define BEAM_INTERVAL 2.5f
 #define BEAM_DURATION 0.8f
-#define BEAM_LENGTH 216.750f
+#define BEAM_LENGTH 270.0f
 #define BEAM_WIDTH 8.0f
-#define BEAM_DAMAGE 1
+#define BEAM_DAMAGE 2
 #define BEAM_SWEEP_ANGLE 0.7f
 
 // Nova
 #define NOVA_INTERVAL 3.0f
-#define NOVA_RADIUS_BASE 49.130f
-#define NOVA_DAMAGE 2
+#define NOVA_RADIUS_BASE 65.0f
+#define NOVA_DAMAGE 3
 #define NOVA_EXPAND_SPEED 400.0f
 
 // Spark Mines
 #define MINE_INTERVAL 2.5f
 #define MINE_LIFE 8.0f
 #define MINE_RADIUS 10.0f
-#define MINE_EXPLOSION_RADIUS 40.000f
-#define MINE_DAMAGE 1
+#define MINE_EXPLOSION_RADIUS 38.0f
+#define MINE_DAMAGE 2
 #define MAX_MINES 16
 
 // Chain Lightning
@@ -74,18 +74,18 @@
 #define MAX_BOOMERANGS 8
 
 // Trail
-#define TRAIL_INTERVAL 0.033f
+#define TRAIL_INTERVAL 0.08f
 #define TRAIL_LIFE 1.2f
 #define TRAIL_RADIUS 8.0f
-#define TRAIL_DAMAGE 10
+#define TRAIL_DAMAGE 5
 #define MAX_TRAIL_MARKS 64
 
 // Whip
 #define WHIP_INTERVAL 1.4f
 #define WHIP_ANIM 0.25f
-#define WHIP_RANGE 100.800f
+#define WHIP_RANGE 95.0f
 #define WHIP_ARC 2.0f
-#define WHIP_DAMAGE 10
+#define WHIP_DAMAGE 5
 
 // Items & Chests
 #define MAX_ITEMS 32
