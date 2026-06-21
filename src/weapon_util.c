@@ -39,9 +39,7 @@ Color enemy_color_for_type(EnemyType type) {
         case ENEMY_GLITCH:    return (Color){220, 80, 180, 255};
         case ENEMY_SPLITTER:  return (Color){255, 80, 60, 255};
         case ENEMY_BOMBER:    return (Color){255, 60, 140, 255};
-        case ENEMY_RANGER:    return (Color){255, 100, 180, 255};
         case ENEMY_SWARM:     return (Color){255, 200, 180, 255};
-        case ENEMY_BADSECTOR: return (Color){200, 60, 60, 255};
         case ENEMY_PHASER:    return (Color){230, 100, 100, 255};
         case ENEMY_TRACKER:   return (Color){255, 90, 70, 255};
         default:              return (Color){255, 200, 100, 255};
@@ -57,7 +55,6 @@ static GemTier gem_tier_for_enemy(EnemyType type, bool elite) {
         case ENEMY_SPLITTER_CHILD:
             return GEM_TIER_S;
         case ENEMY_PACKET:
-        case ENEMY_BADSECTOR:
             return GEM_TIER_L;
         default:
             return GEM_TIER_M;

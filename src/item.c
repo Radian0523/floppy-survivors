@@ -35,12 +35,10 @@ static int drop_tier(EnemyType type) {
     switch (type) {
         case ENEMY_GLITCH:
         case ENEMY_BOMBER:
-        case ENEMY_RANGER:
         case ENEMY_PHASER:
         case ENEMY_TRACKER:
         case ENEMY_SPLITTER:
         case ENEMY_PACKET:
-        case ENEMY_BADSECTOR:
             return 1;
         default:
             return 0;

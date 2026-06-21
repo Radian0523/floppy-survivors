@@ -76,22 +76,10 @@ static void init_enemy_stats(Enemy *e, EnemyType type, float time_bonus) {
             e->speed = BOMBER_SPEED + time_bonus * 0.4f;
             e->radius = BOMBER_RADIUS;
             break;
-        case ENEMY_RANGER:
-            e->hp = RANGER_HP;
-            e->speed = RANGER_SPEED + time_bonus * 0.3f;
-            e->radius = RANGER_RADIUS;
-            e->type_timer = RANGER_FIRE_INTERVAL * 0.6f;
-            break;
         case ENEMY_SWARM:
             e->hp = SWARM_HP;
             e->speed = SWARM_SPEED + time_bonus * 0.4f;
             e->radius = SWARM_RADIUS;
-            break;
-        case ENEMY_BADSECTOR:
-            e->hp = BADSECTOR_HP + (int)(time_bonus / 8.0f);
-            e->speed = 0;
-            e->radius = BADSECTOR_RADIUS;
-            e->type_timer = BADSECTOR_FIRE_INTERVAL;
             break;
         case ENEMY_PHASER:
             e->hp = PHASER_HP;
@@ -147,29 +135,25 @@ static EnemyType choose_enemy_type(float game_time) {
         return ENEMY_TRACKER;
     } else if (progress < 0.65f) {
         int r = rand() % 100;
-        if (r < 15) return ENEMY_BIT;
-        if (r < 28) return ENEMY_FRAGMENT;
-        if (r < 40) return ENEMY_PACKET;
-        if (r < 50) return ENEMY_GLITCH;
-        if (r < 60) return ENEMY_SWARM;
-        if (r < 70) return ENEMY_BOMBER;
-        if (r < 80) return ENEMY_RANGER;
-        if (r < 88) return ENEMY_TRACKER;
-        if (r < 95) return ENEMY_PHASER;
-        return ENEMY_BADSECTOR;
+        if (r < 17) return ENEMY_BIT;
+        if (r < 32) return ENEMY_FRAGMENT;
+        if (r < 47) return ENEMY_PACKET;
+        if (r < 60) return ENEMY_GLITCH;
+        if (r < 73) return ENEMY_SWARM;
+        if (r < 85) return ENEMY_BOMBER;
+        if (r < 92) return ENEMY_TRACKER;
+        return ENEMY_PHASER;
     } else {
         int r = rand() % 100;
-        if (r < 10) return ENEMY_BIT;
-        if (r < 20) return ENEMY_FRAGMENT;
-        if (r < 30) return ENEMY_PACKET;
-        if (r < 38) return ENEMY_GLITCH;
-        if (r < 50) return ENEMY_SWARM;
-        if (r < 60) return ENEMY_BOMBER;
-        if (r < 70) return ENEMY_RANGER;
-        if (r < 78) return ENEMY_TRACKER;
-        if (r < 86) return ENEMY_PHASER;
-        if (r < 92) return ENEMY_SPLITTER;
-        return ENEMY_BADSECTOR;
+        if (r < 12) return ENEMY_BIT;
+        if (r < 24) return ENEMY_FRAGMENT;
+        if (r < 36) return ENEMY_PACKET;
+        if (r < 46) return ENEMY_GLITCH;
+        if (r < 60) return ENEMY_SWARM;
+        if (r < 72) return ENEMY_BOMBER;
+        if (r < 84) return ENEMY_TRACKER;
+        if (r < 92) return ENEMY_PHASER;
+        return ENEMY_SPLITTER;
     }
 }
 
@@ -222,8 +206,8 @@ void enemy_spawn_at(GameState *gs, EnemyType type, Vector2 pos) {
 static void spawn_elite(GameState *gs) {
     // Pick an enemy type appropriate for time (medium/heavy)
     EnemyType candidates[] = {
-        ENEMY_PACKET, ENEMY_GLITCH, ENEMY_BOMBER, ENEMY_RANGER,
-        ENEMY_PHASER, ENEMY_TRACKER, ENEMY_SPLITTER, ENEMY_BADSECTOR
+        ENEMY_PACKET, ENEMY_GLITCH, ENEMY_BOMBER,
+        ENEMY_PHASER, ENEMY_TRACKER, ENEMY_SPLITTER
     };
     int n = (int)(sizeof(candidates) / sizeof(candidates[0]));
     EnemyType type = candidates[rand() % n];
@@ -327,37 +311,6 @@ static void update_one_enemy(GameState *gs, Enemy *e, float dt) {
             }
             break;
 
-        case ENEMY_RANGER:
-            e->type_timer -= dt;
-            if (dist > 0) {
-                float target_dist = RANGER_KEEP_DIST;
-                float move_dir = (dist < target_dist) ? -1.0f : 1.0f;
-                e->vel.x = (dx / dist) * e->speed * move_dir;
-                e->vel.y = (dy / dist) * e->speed * move_dir;
-            }
-            if (e->type_timer <= 0 && dist < 250) {
-                e->type_timer = RANGER_FIRE_INTERVAL;
-                if (dist > 0) {
-                    Vector2 fire_dir = {dx / dist, dy / dist};
-                    enemy_bullet_spawn(gs, e->pos, fire_dir);
-                }
-            }
-            break;
-
-        case ENEMY_BADSECTOR:
-            e->vel.x = 0;
-            e->vel.y = 0;
-            e->type_timer -= dt;
-            if (e->type_timer <= 0) {
-                e->type_timer = BADSECTOR_FIRE_INTERVAL;
-                for (int i = 0; i < 6; i++) {
-                    float angle = (2.0f * 3.14159f * i) / 6.0f;
-                    Vector2 d = {cosf(angle), sinf(angle)};
-                    enemy_bullet_spawn(gs, e->pos, d);
-                }
-            }
-            break;
-
         case ENEMY_PHASER:
             e->phase_timer += dt;
             if (e->phase_timer >= PHASER_CYCLE) e->phase_timer -= PHASER_CYCLE;
@@ -457,9 +410,7 @@ static Color get_enemy_color(EnemyType type) {
         case ENEMY_SPLITTER:       return (Color){255, 80, 60, 255};    // scarlet
         case ENEMY_SPLITTER_CHILD: return (Color){255, 140, 80, 255};   // light scarlet
         case ENEMY_BOMBER:         return (Color){255, 60, 140, 255};   // pink
-        case ENEMY_RANGER:         return (Color){255, 100, 180, 255};  // pink magenta
         case ENEMY_SWARM:          return (Color){255, 200, 180, 255};  // peach
-        case ENEMY_BADSECTOR:      return (Color){200, 60, 60, 255};    // deep red
         case ENEMY_PHASER:         return (Color){230, 100, 100, 255};  // muted red
         case ENEMY_TRACKER:        return (Color){255, 90, 70, 255};    // orange-red
         default:                   return (Color){255, 50, 100, 255};
@@ -511,13 +462,6 @@ static void draw_enemy(const Enemy *e, float scale, Vector2 offset) {
                 (int)(r * 1.2f), (int)(r * 1.2f), col_inner);
             break;
 
-        case ENEMY_BADSECTOR:
-            DrawRectangle((int)(x - r), (int)(y - r), (int)(r * 2), (int)(r * 2), col);
-            DrawRectangleLines((int)(x - r * 1.2f), (int)(y - r * 1.2f),
-                (int)(r * 2.4f), (int)(r * 2.4f), col);
-            DrawCircleV((Vector2){x, y}, r * 0.5f, col_inner);
-            break;
-
         case ENEMY_BOMBER: {
             float pulse = 1.0f + 0.15f * sinf((float)GetTime() * 8.0f);
             DrawCircleV((Vector2){x, y}, r * pulse, col);
@@ -525,12 +469,6 @@ static void draw_enemy(const Enemy *e, float scale, Vector2 offset) {
                 (Color){255, 255, 255, col.a});
             break;
         }
-
-        case ENEMY_RANGER:
-            DrawLineEx((Vector2){x - r, y}, (Vector2){x + r, y}, 3.0f * scale, col);
-            DrawLineEx((Vector2){x, y - r}, (Vector2){x, y + r}, 3.0f * scale, col);
-            DrawCircleV((Vector2){x, y}, r * 0.4f, col_inner);
-            break;
 
         case ENEMY_TRACKER: {
             float a = atan2f(e->vel.y, e->vel.x);
