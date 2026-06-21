@@ -283,32 +283,42 @@ static void draw_game_world(const GameState *gs) {
     }
 
     render_background();
-    BeginBlendMode(BLEND_ADDITIVE);
 
     // === z-order policy (lowest -> highest) =================================
     // Rule: most threat-critical info goes ON TOP so it can never be occluded.
     // Refs: shmups.wiki Boghog's bullet hell shmup 101, Sparen Danmaku guide.
     //   background -> pickups -> ground effects (mines/trail) -> enemies/boss
     //   -> friendly weapons -> particles -> ENEMY BULLETS -> PLAYER -> UI
-    // Player goes on top because (a) we need to find ourselves and
-    // (b) the dark separator ring on the player already lets enemy bullets
-    // read through against it. Enemy bullets sit just below the player so they
-    // dominate friendly visual noise but don't hide the avatar.
+    //
+    // === blend mode policy ==================================================
+    // ADDITIVE only for the friendly side and decorative particles — that is
+    // where the "neon glow" aesthetic belongs. Enemies, enemy bullets, and
+    // the player are drawn with regular ALPHA so dark borders / outlines
+    // actually work and additive accumulation can't white-out the things you
+    // need to read. Without this split, mid/late-game stacking pushes pixels
+    // past 1.0 and they clamp to flat white (learnopengl HDR ref).
 
-    // 1. Pickups (can be partially obscured; HUD reminds player they're there)
+    // 1. Pickups (alpha: crisp shape recognition: gem diamond, HP cross)
+    BeginBlendMode(BLEND_ALPHA);
     gem_draw(gs->gems, gs->scale, shake_offset);
     items_draw(gs, gs->scale, shake_offset);
     chests_draw(gs, gs->scale, shake_offset);
+    EndBlendMode();
 
-    // 2. Ground / placed friendly effects (live below enemies)
+    // 2. Ground / placed friendly effects (additive: glow on the floor)
+    BeginBlendMode(BLEND_ADDITIVE);
     trail_draw(gs, gs->scale, shake_offset);
     mines_draw(gs, gs->scale, shake_offset);
+    EndBlendMode();
 
-    // 3. Enemies & boss
+    // 3. Enemies & boss (alpha: keep silhouettes solid, no additive bleed)
+    BeginBlendMode(BLEND_ALPHA);
     enemy_draw(gs->enemies, gs->scale, shake_offset);
     boss_draw(gs, gs->scale, shake_offset);
+    EndBlendMode();
 
-    // 4. Friendly weapons (your active firepower, above enemies so you see hits)
+    // 4. Friendly weapons (additive: this is where the neon glow comes from)
+    BeginBlendMode(BLEND_ADDITIVE);
     bullet_draw(gs->bullets, gs->scale, shake_offset);
     orbiters_draw(gs, gs->scale, shake_offset);
     beam_draw(gs, gs->scale, shake_offset);
@@ -317,17 +327,19 @@ static void draw_game_world(const GameState *gs) {
     boomerang_draw(gs, gs->scale, shake_offset);
     whip_draw(gs, gs->scale, shake_offset);
 
-    // 5. Particles (decorative, above weapons OK because they fade fast)
+    // 5. Particles (additive: short-lived sparks, fade out fast)
     particles_draw(gs, gs->scale, shake_offset);
-
-    // 6. ENEMY BULLETS (highest gameplay priority — must never be hidden)
-    enemy_bullets_draw(gs, gs->scale, shake_offset);
-
-    // 7. PLAYER (avatar always on top; dark separator ring keeps it readable)
-    player_draw(&gs->player, gs->scale, shake_offset);
-
     EndBlendMode();
 
+    // 6. ENEMY BULLETS (alpha: dark border survives, no white-out from glow)
+    BeginBlendMode(BLEND_ALPHA);
+    enemy_bullets_draw(gs, gs->scale, shake_offset);
+
+    // 7. PLAYER (alpha: dark separator ring needs alpha to actually be dark)
+    player_draw(&gs->player, gs->scale, shake_offset);
+    EndBlendMode();
+
+    // HP bar and popups in default alpha (sharp text/rect edges).
     player_draw_hp_bar(&gs->player, gs->scale, shake_offset);
     popups_draw(gs, gs->scale, shake_offset);
 }

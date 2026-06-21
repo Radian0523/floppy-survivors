@@ -59,16 +59,21 @@ void trail_update(GameState *gs, float dt) {
 
 void trail_draw(const GameState *gs, float scale, Vector2 offset) {
     if (!gs->trail.has) return;
+    // Distinct shape vs orbiters: TRAIL = thin ring (residue/footprint feel),
+    // ORBITERS = solid orb with halo. Lower base opacity so persistent trail
+    // marks don't crowd the floor visually as much.
     float life_max = gs->trail.life * gs->weapon_duration_mult;
     for (int i = 0; i < MAX_TRAIL_MARKS; i++) {
         if (!gs->trail.slots[i].active) continue;
         float ratio = (life_max > 0) ? gs->trail.slots[i].life / life_max : 0;
         float x = gs->trail.slots[i].pos.x * scale + offset.x;
         float y = gs->trail.slots[i].pos.y * scale + offset.y;
-        float r = TRAIL_RADIUS * gs->weapon_area_mult * scale * (0.6f + 0.4f * ratio);
-        Color col = {120, 220, 255, (unsigned char)(180 * ratio)};
-        Color inner = {200, 240, 255, (unsigned char)(220 * ratio)};
-        DrawCircleV((Vector2){x, y}, r, col);
-        DrawCircleV((Vector2){x, y}, r * 0.5f, inner);
+        float r = TRAIL_RADIUS * gs->weapon_area_mult * scale * (0.7f + 0.3f * ratio);
+        Color ring = {100, 200, 255, (unsigned char)(140 * ratio)};
+        Color dot  = {180, 235, 255, (unsigned char)(180 * ratio)};
+        // Outer ring only (no solid fill — reads as "ground decal")
+        DrawRing((Vector2){x, y}, r * 0.78f, r, 0, 360, 24, ring);
+        // Small central dot to anchor it
+        DrawCircleV((Vector2){x, y}, r * 0.18f, dot);
     }
 }

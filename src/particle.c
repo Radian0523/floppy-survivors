@@ -152,12 +152,26 @@ void popups_draw(const GameState *gs, float scale, Vector2 offset) {
         float x = p->pos.x * scale + offset.x;
         float y = p->pos.y * scale + offset.y;
         sprintf(buf, "%d", p->value);
-        int size = 14;
+        // Damage popups scale visually with damage magnitude — small hits
+        // stay quiet, big hits demand attention. Ref: "Designing for
+        // Difficulty: Readability in ARPGs" (gamedeveloper.com).
+        //   1     ->  size 11 (smallest)
+        //   2-3   ->  size 13
+        //   4-7   ->  size 16
+        //   8-15  ->  size 20
+        //   16+   ->  size 26 (boss-tier hits)
+        int v = p->value;
+        int size;
+        if (v <= 1)       size = 11;
+        else if (v <= 3)  size = 13;
+        else if (v <= 7)  size = 16;
+        else if (v <= 15) size = 20;
+        else              size = 26;
         int tw = MeasureText(buf, size);
         Color c = p->color;
         c.a = (unsigned char)(255 * ratio);
         Color shadow = {0, 0, 0, (unsigned char)(180 * ratio)};
-        DrawText(buf, (int)(x - tw / 2 + 1), (int)(y + 1), size, shadow);
+        DrawText(buf, (int)(x - tw / 2 + 2), (int)(y + 2), size, shadow);
         DrawText(buf, (int)(x - tw / 2), (int)y, size, c);
     }
 }

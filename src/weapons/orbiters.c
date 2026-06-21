@@ -56,7 +56,11 @@ void orbiters_draw(const GameState *gs, float scale, Vector2 offset) {
         float x = ox * scale + offset.x;
         float y = oy * scale + offset.y;
         float r = ORBITER_RADIUS * scale;
+        // Distinct shape vs trail (which is a thin ring decal):
+        // ORBITERS = solid orb + faint outer halo. Reads as a tangible "object".
+        DrawCircleV((Vector2){x, y}, r * 1.5f, (Color){100, 150, 255, 60});
         DrawCircleV((Vector2){x, y}, r, (Color){100, 150, 255, 255});
-        DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){150, 200, 255, 200});
+        DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){200, 230, 255, 220});
+        DrawCircleV((Vector2){x, y}, r * 0.3f, (Color){255, 255, 255, 255});
     }
 }
