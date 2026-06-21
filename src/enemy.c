@@ -557,15 +557,10 @@ void enemy_draw(const Enemy enemies[], float scale, Vector2 offset) {
 }
 
 void enemy_bullet_spawn(GameState *gs, Vector2 pos, Vector2 dir) {
-    for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
-        if (!gs->enemy_bullets[i].active) {
-            gs->enemy_bullets[i].active = true;
-            gs->enemy_bullets[i].pos = pos;
-            gs->enemy_bullets[i].vel.x = dir.x * ENEMY_BULLET_SPEED;
-            gs->enemy_bullets[i].vel.y = dir.y * ENEMY_BULLET_SPEED;
-            return;
-        }
-    }
+    // Enemy bullets disabled: the small flying red orbs clutter mid/late game
+    // and confuse the player about what is/isn't a threat. RANGER and
+    // BADSECTOR fall back to being harmless distance/static obstacles.
+    (void)gs; (void)pos; (void)dir;
 }
 
 void enemy_bullets_update(GameState *gs, float dt) {
