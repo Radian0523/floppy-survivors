@@ -1,9 +1,47 @@
 #include "game.h"
+#include "rlgl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
+// Create a RenderTexture2D with a half-float (RGBA16F) color attachment.
+// This lets additive blending accumulate beyond 1.0 without clamping, so we
+// can apply tonemapping in the final post pass instead of getting flat white
+// blow-outs at glow overlap. Ref: learnopengl.com Advanced-Lighting/HDR.
+static RenderTexture2D LoadRenderTextureHDR(int width, int height) {
+    RenderTexture2D target = {0};
+    target.id = rlLoadFramebuffer();
+    if (target.id > 0) {
+        rlEnableFramebuffer(target.id);
+        target.texture.id = rlLoadTexture(NULL, width, height,
+            PIXELFORMAT_UNCOMPRESSED_R16G16B16A16, 1);
+        target.texture.width = width;
+        target.texture.height = height;
+        target.texture.format = PIXELFORMAT_UNCOMPRESSED_R16G16B16A16;
+        target.texture.mipmaps = 1;
+        target.depth.id = rlLoadTextureDepth(width, height, true);
+        target.depth.width = width;
+        target.depth.height = height;
+        target.depth.format = 19;
+        target.depth.mipmaps = 1;
+        rlFramebufferAttach(target.id, target.texture.id,
+            RL_ATTACHMENT_COLOR_CHANNEL0, RL_ATTACHMENT_TEXTURE2D, 0);
+        rlFramebufferAttach(target.id, target.depth.id,
+            RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_RENDERBUFFER, 0);
+        if (!rlFramebufferComplete(target.id)) {
+            TraceLog(LOG_WARNING, "HDR framebuffer incomplete, falling back");
+        }
+        rlDisableFramebuffer();
+    }
+    return target;
+}
+
+// Final post-process: gaussian-ish bloom + Reinhard tonemap.
+// The input texture is RGBA16F so additive accumulation can exceed 1.0.
+// Reinhard ( x / (x + 1) ) compresses it back into [0,1) gracefully,
+// preserving relative brightness instead of clamping to flat white.
+// Ref: learnopengl.com Advanced-Lighting/HDR
 static const char *bloomShaderCode =
     "#version 330\n"
     "in vec2 fragTexCoord;\n"
@@ -22,7 +60,11 @@ static const char *bloomShaderCode =
     "        }\n"
     "    }\n"
     "    b /= 50.0;\n"
-    "    finalColor = c + b * 1.2;\n"
+    "    vec3 hdr = c.rgb + b.rgb * 1.2;\n"
+    "    // Reinhard tonemap with mild exposure lift (1.2x) before mapping.\n"
+    "    vec3 lit = hdr * 1.2;\n"
+    "    vec3 mapped = lit / (lit + vec3(1.0));\n"
+    "    finalColor = vec4(mapped, 1.0);\n"
     "}\n";
 
 static void game_init(GameState *gs) {
@@ -470,7 +512,7 @@ int main(int argc, char **argv) {
     bgm_init();
     bgm_play(BGM_TITLE);
 
-    RenderTexture2D target = LoadRenderTexture(WINDOW_W, WINDOW_H);
+    RenderTexture2D target = LoadRenderTextureHDR(WINDOW_W, WINDOW_H);
     Shader bloom = LoadShaderFromMemory(0, bloomShaderCode);
 
     int resLoc = GetShaderLocation(bloom, "resolution");

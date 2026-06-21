@@ -135,11 +135,11 @@
 
 ## 6. 進捗トラッキング
 
-- [ ] Section 1: プレイヤー輪郭リング
-- [ ] Section 2: z-order ルール
-- [ ] Section 3: 敵弾配色統一
-- [ ] Section 4: パーティクル動的減衰
-- [ ] Section 5: 加算合成限定
-- [ ] Section 6: 武器差別化見直し
-- [ ] Section 7: ダメージサイズ一致
-- [ ] Section 8: HDR レンダリング
+- [x] Section 1: プレイヤー輪郭リング
+- [x] Section 2: z-order ルール
+- [x] Section 3: 敵弾配色統一
+- [x] Section 4: パーティクル動的減衰
+- [x] Section 5: 加算合成限定
+- [x] Section 6: 武器差別化見直し
+- [x] Section 7: ダメージサイズ一致
+- [x] Section 8: HDR レンダリング
