@@ -88,13 +88,13 @@ void player_draw(const Player *p, float scale, Vector2 offset) {
     // body color still pops; ring extends well past the hit radius.
     float t = (float)GetTime();
     float ring_pulse = 1.0f + 0.08f * sinf(t * 4.5f);
-    float ring_r = r * 1.85f * ring_pulse;
+    float ring_r = r * 1.30f * ring_pulse;
 
     // Dark separator (notch the player out of any additive blowout behind it)
-    DrawCircleV((Vector2){x, y}, ring_r + 2.0f, (Color){0, 0, 0, 200});
+    DrawCircleV((Vector2){x, y}, ring_r + 1.5f, (Color){0, 0, 0, 200});
     // Cyan glow ring
     DrawCircleV((Vector2){x, y}, ring_r, (Color){80, 220, 255, 110});
-    DrawCircleV((Vector2){x, y}, ring_r * 0.85f, (Color){0, 0, 0, 230});
+    DrawCircleV((Vector2){x, y}, ring_r * 0.88f, (Color){0, 0, 0, 230});
 
     // Body
     DrawCircleV((Vector2){x, y}, r, (Color){0, 255, 255, 255});

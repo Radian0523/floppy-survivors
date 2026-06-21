@@ -157,14 +157,23 @@ void items_draw(const GameState *gs, float scale, Vector2 offset) {
             DrawRectangle((int)(x - r * 0.7f), (int)(y - r * 0.15f),
                 (int)(r * 1.4f), (int)(r * 0.3f), inner);
         } else {
-            // Magnet: bigger glowing gem (diamond) like a super-gem
+            // Magnet: gem-sized diamond with a faint ring to hint "pull effect".
+            // Same footprint as a regular gem (GEM_RADIUS) so it doesn't
+            // dominate the screen.
             float pulse = 1.0f + 0.15f * sinf(t * 4.0f + i * 0.3f);
-            float rr = r * 1.4f * pulse;
+            float rr = GEM_RADIUS * scale * pulse;
             Color outer = {120, 255, 120, (unsigned char)(255 * a)};
             Color inner = {220, 255, 220, (unsigned char)(255 * a)};
-            Color glow  = {120, 255, 120, (unsigned char)(90 * a)};
+            Color ring  = {180, 255, 180, (unsigned char)(140 * a)};
 
-            DrawCircleV((Vector2){x, y}, rr * 1.4f, glow);
+            // Subtle pull ring (rotating) to distinguish from a normal gem
+            float rot = t * 2.5f;
+            for (int k = 0; k < 4; k++) {
+                float ang = rot + k * 1.5707f;
+                float dx = cosf(ang) * rr * 1.5f;
+                float dy = sinf(ang) * rr * 1.5f;
+                DrawCircleV((Vector2){x + dx, y + dy}, rr * 0.15f, ring);
+            }
 
             Vector2 top    = {x, y - rr * 1.2f};
             Vector2 right  = {x + rr * 0.9f, y};
@@ -179,20 +188,6 @@ void items_draw(const GameState *gs, float scale, Vector2 offset) {
             Vector2 ileft   = {x - rr * 0.45f, y};
             DrawTriangle(itop, ileft, iright, inner);
             DrawTriangle(ibottom, iright, ileft, inner);
-
-            // Orbiting sparkle gems hinting at "magnet" effect
-            for (int k = 0; k < 3; k++) {
-                float ang = t * 3.0f + k * 2.094f;
-                float sx = x + cosf(ang) * rr * 1.6f;
-                float sy = y + sinf(ang) * rr * 1.6f;
-                float sr = rr * 0.25f;
-                Vector2 stop_   = {sx, sy - sr};
-                Vector2 sright  = {sx + sr * 0.75f, sy};
-                Vector2 sbot    = {sx, sy + sr};
-                Vector2 sleft   = {sx - sr * 0.75f, sy};
-                DrawTriangle(stop_, sleft, sright, outer);
-                DrawTriangle(sbot, sright, sleft, outer);
-            }
         }
     }
 }
