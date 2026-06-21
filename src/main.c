@@ -285,8 +285,30 @@ static void draw_game_world(const GameState *gs) {
     render_background();
     BeginBlendMode(BLEND_ADDITIVE);
 
+    // === z-order policy (lowest -> highest) =================================
+    // Rule: most threat-critical info goes ON TOP so it can never be occluded.
+    // Refs: shmups.wiki Boghog's bullet hell shmup 101, Sparen Danmaku guide.
+    //   background -> pickups -> ground effects (mines/trail) -> enemies/boss
+    //   -> friendly weapons -> particles -> ENEMY BULLETS -> PLAYER -> UI
+    // Player goes on top because (a) we need to find ourselves and
+    // (b) the dark separator ring on the player already lets enemy bullets
+    // read through against it. Enemy bullets sit just below the player so they
+    // dominate friendly visual noise but don't hide the avatar.
+
+    // 1. Pickups (can be partially obscured; HUD reminds player they're there)
+    gem_draw(gs->gems, gs->scale, shake_offset);
+    items_draw(gs, gs->scale, shake_offset);
+    chests_draw(gs, gs->scale, shake_offset);
+
+    // 2. Ground / placed friendly effects (live below enemies)
     trail_draw(gs, gs->scale, shake_offset);
     mines_draw(gs, gs->scale, shake_offset);
+
+    // 3. Enemies & boss
+    enemy_draw(gs->enemies, gs->scale, shake_offset);
+    boss_draw(gs, gs->scale, shake_offset);
+
+    // 4. Friendly weapons (your active firepower, above enemies so you see hits)
     bullet_draw(gs->bullets, gs->scale, shake_offset);
     orbiters_draw(gs, gs->scale, shake_offset);
     beam_draw(gs, gs->scale, shake_offset);
@@ -294,13 +316,14 @@ static void draw_game_world(const GameState *gs) {
     chain_draw(gs, gs->scale, shake_offset);
     boomerang_draw(gs, gs->scale, shake_offset);
     whip_draw(gs, gs->scale, shake_offset);
-    enemy_draw(gs->enemies, gs->scale, shake_offset);
-    enemy_bullets_draw(gs, gs->scale, shake_offset);
-    boss_draw(gs, gs->scale, shake_offset);
-    gem_draw(gs->gems, gs->scale, shake_offset);
-    items_draw(gs, gs->scale, shake_offset);
-    chests_draw(gs, gs->scale, shake_offset);
+
+    // 5. Particles (decorative, above weapons OK because they fade fast)
     particles_draw(gs, gs->scale, shake_offset);
+
+    // 6. ENEMY BULLETS (highest gameplay priority — must never be hidden)
+    enemy_bullets_draw(gs, gs->scale, shake_offset);
+
+    // 7. PLAYER (avatar always on top; dark separator ring keeps it readable)
     player_draw(&gs->player, gs->scale, shake_offset);
 
     EndBlendMode();

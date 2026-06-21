@@ -592,12 +592,25 @@ void enemy_bullets_update(GameState *gs, float dt) {
 }
 
 void enemy_bullets_draw(const GameState *gs, float scale, Vector2 offset) {
+    // Danmaku convention (Boghog / CAVE): bright core + dark border. Hue stays
+    // in red/pink/magenta so bullets never clash with explosions (orange/gold)
+    // or pickups (green/cyan). Slight pulse keeps motion saliency high.
+    float t = (float)GetTime();
     for (int i = 0; i < MAX_ENEMY_BULLETS; i++) {
         if (!gs->enemy_bullets[i].active) continue;
         float x = gs->enemy_bullets[i].pos.x * scale + offset.x;
         float y = gs->enemy_bullets[i].pos.y * scale + offset.y;
         float r = ENEMY_BULLET_RADIUS * scale;
-        DrawCircleV((Vector2){x, y}, r, (Color){255, 80, 80, 255});
-        DrawCircleV((Vector2){x, y}, r * 0.5f, (Color){255, 200, 200, 200});
+        float pulse = 1.0f + 0.10f * sinf(t * 7.0f + i * 0.7f);
+
+        // Dark outer border (value contrast: notch out of bright additive bg)
+        DrawCircleV((Vector2){x, y}, r * 1.55f * pulse,
+                    (Color){25, 0, 10, 220});
+        // Saturated mid ring (the "this is enemy bullet" hue signal)
+        DrawCircleV((Vector2){x, y}, r * 1.10f * pulse,
+                    (Color){255, 70, 130, 255});
+        // Bright pink core (highest luminance = visible against any color)
+        DrawCircleV((Vector2){x, y}, r * 0.55f * pulse,
+                    (Color){255, 220, 240, 255});
     }
 }

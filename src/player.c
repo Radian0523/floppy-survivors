@@ -83,8 +83,24 @@ void player_draw(const Player *p, float scale, Vector2 offset) {
         return;
     }
 
+    // Outline ring: dark halo (separation from bright effects) + cyan glow ring
+    // (pulsing to keep "me" salient even in chaos). Drawn UNDER the body so the
+    // body color still pops; ring extends well past the hit radius.
+    float t = (float)GetTime();
+    float ring_pulse = 1.0f + 0.08f * sinf(t * 4.5f);
+    float ring_r = r * 1.85f * ring_pulse;
+
+    // Dark separator (notch the player out of any additive blowout behind it)
+    DrawCircleV((Vector2){x, y}, ring_r + 2.0f, (Color){0, 0, 0, 200});
+    // Cyan glow ring
+    DrawCircleV((Vector2){x, y}, ring_r, (Color){80, 220, 255, 110});
+    DrawCircleV((Vector2){x, y}, ring_r * 0.85f, (Color){0, 0, 0, 230});
+
+    // Body
     DrawCircleV((Vector2){x, y}, r, (Color){0, 255, 255, 255});
-    DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){100, 255, 255, 200});
+    DrawCircleV((Vector2){x, y}, r * 0.6f, (Color){200, 255, 255, 230});
+    // White hot core: highest luminance pixel on screen, marks "you are here"
+    DrawCircleV((Vector2){x, y}, r * 0.28f, (Color){255, 255, 255, 255});
 }
 
 void player_draw_hp_bar(const Player *p, float scale, Vector2 offset) {

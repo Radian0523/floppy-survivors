@@ -14,7 +14,34 @@ void particles_init(GameState *gs) {
     gs->flash_amount = 0;
 }
 
+// Dynamic decimation thresholds (combat against overdraw + visual chaos).
+// Once active particle count crosses these thresholds, new bursts spawn fewer
+// particles and existing tails fade faster. Ref: Christer Ericson on additive
+// particle overdraw cost.
+#define PARTICLE_SOFT_LIMIT (MAX_PARTICLES * 3 / 4)   // 75%: half-count bursts
+#define PARTICLE_HARD_LIMIT (MAX_PARTICLES * 9 / 10)  // 90%: drop new bursts
+
+static int count_active_particles(const GameState *gs) {
+    int n = 0;
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        if (gs->particles[i].active) n++;
+    }
+    return n;
+}
+
 void particles_spawn_burst(GameState *gs, Vector2 pos, Color color, int count) {
+    // Pressure-based decimation: skip or shrink new bursts if particles
+    // are already crowded. Critical bursts (kills, hits) should still register
+    // visually, but extras (sparkles, decorations) bow out.
+    int active = count_active_particles(gs);
+    if (active >= PARTICLE_HARD_LIMIT) {
+        return;  // Drop entirely; the screen is already overloaded
+    }
+    if (active >= PARTICLE_SOFT_LIMIT) {
+        count = count / 2;
+        if (count < 1) count = 1;
+    }
+
     int spawned = 0;
     for (int i = 0; i < MAX_PARTICLES && spawned < count; i++) {
         if (gs->particles[i].active) continue;
@@ -30,6 +57,8 @@ void particles_spawn_burst(GameState *gs, Vector2 pos, Color color, int count) {
 
         float life_var = (rand() % 100) / 200.0f;
         p->life = PARTICLE_LIFE * (0.6f + life_var);
+        // Under soft pressure, shorten lifetime so the pool churns faster.
+        if (active >= PARTICLE_SOFT_LIMIT) p->life *= 0.6f;
         p->max_life = p->life;
         p->color = color;
 
