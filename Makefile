@@ -132,3 +132,7 @@ tune-bayes: mac
 # Balance per-weapon damage so each weapon contributes similar DPS
 tune-weapons: mac
 	python3 tools/tune_weapons.py --runs 12 --iters 3
+
+# Scale enemy HPs directly to hit a target bot win rate (default 50%)
+tune-hp: mac
+	python3 tools/tune_difficulty_hp.py --runs 12 --iters 5
